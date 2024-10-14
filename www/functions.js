@@ -1,7 +1,7 @@
 mapboxgl.accessToken =
   "pk.eyJ1IjoicGFzc3RzY2h1IiwiYSI6ImFwSFVvOVEifQ.djLlizVZhCdi5FCSB3U9OA";
 
-var colors = [
+const colors = [
   "hsl",
   ["%", ["*", ["to-number", ["get", "name"]], 137.508], 360],
   100,
@@ -109,7 +109,7 @@ const initData = (map) => {
             [Number.MIN_VALUE, Number.MIN_VALUE],
           ]
         );
-      map.fitBounds(bounds, { duration: 0, padding: 10 });
+      map.fitBounds(bounds, { padding: 10 });
     });
   // init positions
   fetch("/positions")
@@ -133,11 +133,11 @@ const initData = (map) => {
         const btn = row
           .appendChild(document.createElement("td"))
           .appendChild(document.createElement("button"));
-        btn.append("Request");
+        btn.innerHTML = "&#128260;&#xFE0E;";
         btn.addEventListener("click", () =>
           requestPosition(pos.properties.number)
         );
-        document.getElementById("data").appendChild(row);
+        map.trackers_.appendChild(row);
       })
     );
   map.on("sourcedata", updateData);
@@ -183,7 +183,49 @@ window.addEventListener("load", () => {
   new mapboxgl.Map({
     container: "map",
     style: "mapbox://styles/mapbox/outdoors-v12",
+    center: [0, 0],
   }).on("load", (evt) => {
+    evt.target.addControl(new mapboxgl.FullscreenControl());
+    evt.target.addControl(new mapboxgl.GeolocateControl());
+    evt.target.addControl(new mapboxgl.NavigationControl());
+    evt.target.addControl(new mapboxgl.ScaleControl());
+    evt.target.addControl(
+      {
+        onAdd: (map) => {
+          const container = document.createElement("table");
+          const toggle = container.appendChild(document.createElement("thead"));
+          const body = container.appendChild(document.createElement("tbody"));
+          const head = toggle.appendChild(document.createElement("tr"));
+
+          head.appendChild(document.createElement("th")).innerHTML = "#";
+          head.appendChild(document.createElement("th")).innerHTML =
+            "&#128267;&#xFE0E;";
+          head.appendChild(document.createElement("th")).innerHTML =
+            "&#128228;&#xFE0E;";
+          head.appendChild(document.createElement("th")).innerHTML =
+            "&#128229;&#xFE0E;";
+          head.appendChild(document.createElement("th"));
+
+          container.className = "mapboxgl-ctrl mapboxgl-ctrl-group";
+          toggle.addEventListener("click", () => {
+            body.style.display = body.style.display == "none" ? "" : "none";
+          });
+          body.style.display = "none";
+          body.style.textAlign = "right";
+
+          map.trackerContainer_ = container;
+          map.trackers_ = body;
+
+          return container;
+        },
+        onRemove: (map) => {
+          map.trackerContainer_.parentNode.removeChild(map.trackerContainer_);
+          map.trackers_ = undefined;
+          map.trackerContainer_ = undefined;
+        },
+      },
+      "top-left"
+    );
     initMap(evt.target);
     initData(evt.target);
   });
