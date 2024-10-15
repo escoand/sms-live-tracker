@@ -11,4 +11,3 @@ TMP=$(mktemp -u "/var/spool/sms/outgoing/XXXXXXXXXX")
 
 echo "HTTP/1.1 200 OK"
 echo
-echo
