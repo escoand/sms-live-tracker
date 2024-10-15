@@ -35,8 +35,7 @@ elif [ "$EVENT" = RECEIVED ]; then
             (.features[] | select(.properties.number == $number) | .geometry.coordinates) |= $coords |
             (.features[] | select(.properties.number == $number) | .properties.received) |= $datetime |
             (.features[] | select(.properties.number == $number) | .properties.battery) |= $battery |
-            (.features[] | select(.properties.number == $number) | .properties.id) |= $id |
-            (.features[] | select(.properties.number == $number) | .properties.valid) |= true
+            (.features[] | select(.properties.number == $number) | .properties.id) |= $id
         ' \
         "$POSITIONS" >"$TMP" &&
         cat "$TMP" >"$POSITIONS" ||
