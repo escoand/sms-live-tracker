@@ -187,26 +187,27 @@ const updatePositions = (map) => {
       // update data table
       const now = Date.now();
       json.features.forEach((pos) => {
+        const prefix = "data-" + pos.properties.name;
         // create tracker entry
-        if (!document.getElementById("data-" + pos.properties.name)) {
+        if (!document.getElementById(prefix)) {
           const row = document.createElement("tr");
-          row.setAttribute("id", "data-" + pos.properties.name);
+          row.setAttribute("id", prefix);
           row
             .appendChild(document.createElement("td"))
             .append(pos.properties.name);
           row
             .appendChild(document.createElement("td"))
-            .setAttribute("id", "data-" + pos.properties.name + "-battery");
+            .setAttribute("id", prefix + "-battery");
           row
             .appendChild(document.createElement("td"))
-            .setAttribute("id", "data-" + pos.properties.name + "-requested");
+            .setAttribute("id", prefix + "-requested");
           row
             .appendChild(document.createElement("td"))
-            .setAttribute("id", "data-" + pos.properties.name + "-received");
+            .setAttribute("id", prefix + "-received");
           const btn = row
             .appendChild(document.createElement("td"))
             .appendChild(document.createElement("button"));
-          btn.innerHTML = "&#128260;&#xFE0E;";
+          btn.innerHTML = "&#128260;";
           btn.addEventListener("click", () =>
             requestPosition(pos.properties.number)
           );
@@ -215,17 +216,16 @@ const updatePositions = (map) => {
         // update tracker entry
         const requested = new Date(pos.properties.requested).getTime();
         const received = new Date(pos.properties.received).getTime();
-        document.getElementById(
-          "data-" + pos.properties.name + "-battery"
-        ).innerHTML = pos.properties.battery;
-        document.getElementById(
-          "data-" + pos.properties.name + "-requested"
-        ).innerHTML = requested
+        document.getElementById(prefix).style.color = !pos.geometry.coordinates
+          .length
+          ? "orangered"
+          : "";
+        document.getElementById(prefix + "-battery").innerHTML =
+          pos.properties.battery;
+        document.getElementById(prefix + "-requested").innerHTML = requested
           ? Math.round((now - requested) / 1000 / 60) + "min"
           : "";
-        document.getElementById(
-          "data-" + pos.properties.name + "-received"
-        ).innerHTML = received
+        document.getElementById(prefix + "-received").innerHTML = received
           ? Math.round((now - received) / 1000 / 60) + "min"
           : "";
       });

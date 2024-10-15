@@ -24,18 +24,19 @@ elif [ "$EVENT" = RECEIVED ]; then
     DATETIME=$(tr '\r' '\n' <"$FILE" | awk -F'[:/ ]' '$1=="T" { printf "20%02i-%02i-%02iT%02i:%02i:%02i+0100",$4,$3,$2,$5,$6,$7 }')
     BATTERY=$(tr '\r' '\n' <"$FILE" | awk -F':' '$1=="Bat" { print $2 }')
     ID=$(tr '\r' '\n' <"$FILE" | awk -F':' '$1=="ID" { print $2 }')
+    [ "$LAT" ] && [ "$LON" ] && COORDS="[$LAT,$LON]" || COORDS="[]"
     jq -c \
         --arg number "$NUMBER" \
-        --argjson lat "$LAT" \
-        --argjson lon "$LON" \
+        --argjson coords "$COORDS" \
         --arg datetime "$DATETIME" \
         --arg battery "$BATTERY" \
         --arg id "$ID" \
         '
-            (.features[] | select(.properties.number == $number) | .geometry.coordinates) |= [$lon, $lat] |
+            (.features[] | select(.properties.number == $number) | .geometry.coordinates) |= $coords |
             (.features[] | select(.properties.number == $number) | .properties.received) |= $datetime |
             (.features[] | select(.properties.number == $number) | .properties.battery) |= $battery |
-            (.features[] | select(.properties.number == $number) | .properties.id) |= $id
+            (.features[] | select(.properties.number == $number) | .properties.id) |= $id |
+            (.features[] | select(.properties.number == $number) | .properties.valid) |= true
         ' \
         "$POSITIONS" >"$TMP" &&
         cat "$TMP" >"$POSITIONS" ||
