@@ -9,8 +9,9 @@ mkdir -p /var/spool/sms/checked \
     /var/spool/sms/outgoing \
     "$POSDIR"
 touch "$POSITIONS" /run/smsd.pid
-chmod 0644 "$POSITIONS"
 chown -R smsd:smsd /var/spool/sms/ /run/smsd.pid
+chmod 0644 "$POSITIONS"
+chmod 0777 /var/spool/sms/outgoing
 
 # start frontend
 sed -i "s|{POSITIONS_DIR}|$POSDIR|; s|{POSITIONS_FILE}|$POSFILE|" /etc/nginx/http.d/default.conf
