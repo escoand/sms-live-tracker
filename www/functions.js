@@ -97,12 +97,9 @@ const initMap = (evt) => {
         const head = toggle.appendChild(document.createElement("tr"));
 
         head.appendChild(document.createElement("th")).innerHTML = "#";
-        head.appendChild(document.createElement("th")).innerHTML =
-          "&#128267;&#xFE0E;";
-        head.appendChild(document.createElement("th")).innerHTML =
-          "&#128228;&#xFE0E;";
-        head.appendChild(document.createElement("th")).innerHTML =
-          "&#128229;&#xFE0E;";
+        head.appendChild(document.createElement("th")).innerHTML = "&#128267;";
+        head.appendChild(document.createElement("th")).innerHTML = "&#128228;";
+        head.appendChild(document.createElement("th")).innerHTML = "&#128229;";
         head.appendChild(document.createElement("th"));
 
         container.className = "mapboxgl-ctrl mapboxgl-ctrl-group";
