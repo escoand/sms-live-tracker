@@ -7,7 +7,8 @@ RUN apk --no-cache add \
         nginx \
         spawn-fcgi \
         smstools \
-        usb-modeswitch
+        usb-modeswitch && \
+    adduser smsd audio
 
 COPY scripts/   /usr/local/bin/
 COPY www/       /var/www/html/
