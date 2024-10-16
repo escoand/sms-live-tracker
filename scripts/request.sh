@@ -1,13 +1,20 @@
 #!/bin/sh -e
 
 [ $# = 1 ] && NUMBER=$1 || NUMBER=$(cat)
-TMP=$(mktemp -u "/var/spool/sms/outgoing/XXXXXXXXXX")
+DATETIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+TMP=$(mktemp)
 
-{
-    echo To: "$NUMBER"
-    echo
-    echo "$PASSWORD"
-} >"$TMP"
+umask 022
+
+sms.sh SEND "${NUMBER:?}" "${PASSWORD:?}"
+
+jq -c \
+    --arg number "$NUMBER" \
+    --arg datetime "$DATETIME" \
+    '(.features[] | select(.properties.number == $number) | .properties.requested) |= $datetime' \
+    "$POSITIONS" >"$TMP"
+cp "$TMP" "$POSITIONS"
+rm -f "%TMP"
 
 echo "HTTP/1.1 200 OK"
 echo

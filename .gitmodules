@@ -1,0 +1,3 @@
+[submodule "xdsopl"]
+	path = xdsopl
+	url = https://github.com/xdsopl/gsm

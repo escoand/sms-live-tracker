@@ -4,23 +4,18 @@ POSDIR=${POSITIONS%/*}
 POSFILE=${POSITIONS##*/}
 
 # init env
-mkdir -p /var/spool/sms/checked \
-    /var/spool/sms/incoming \
-    /var/spool/sms/outgoing \
-    "$POSDIR"
-touch "$POSITIONS" /run/smsd.pid
-chown -R smsd:smsd /var/spool/sms/ /run/smsd.pid
+chown -R fcgiwrap:www-data "$POSDIR"
+chmod 2755 "$POSDIR"
 chmod 0644 "$POSITIONS"
-chmod 0777 /var/spool/sms/outgoing
 
 # start frontend
 sed -i "s|{POSITIONS_DIR}|$POSDIR|; s|{POSITIONS_FILE}|$POSFILE|" /etc/nginx/http.d/default.conf
-spawn-fcgi -f /usr/bin/fcgiwrap -s /run/fcgiwrap.sock -u fcgiwrap -U nginx
+spawn-fcgi -f "/usr/bin/fcgiwrap -f" -s /tmp/fcgiwrap.sock -u fcgiwrap -U nginx
 nginx
 
-# switch to modem mode
-usb_modeswitch -v 19d2 -p 0031 || true
-
 # start backend
-sed -i "s|{PIN}|$PIN|" /etc/smsd.conf
-exec /usr/sbin/smsd
+usb_modeswitch -v 19d2 -p 0031 || true
+while true; do
+    receive.sh
+    sleep 30
+done

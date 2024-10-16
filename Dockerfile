@@ -1,3 +1,10 @@
+FROM alpine:3.20.3 AS builder
+
+COPY xdsopl /build
+RUN apk --no-cache add gcc make musl-dev && \
+    cd /build && \
+    make all
+
 FROM alpine:3.20.3
 
 RUN apk --no-cache add \
@@ -6,16 +13,15 @@ RUN apk --no-cache add \
         jq \
         nginx \
         spawn-fcgi \
-        smstools \
         usb-modeswitch && \
-    adduser smsd audio
+    addgroup fcgiwrap audio
 
 COPY scripts/   /usr/local/bin/
 COPY www/       /var/www/html/
 COPY nginx.conf /etc/nginx/http.d/default.conf
-COPY smsd.conf  /etc/smsd.conf
+COPY --from=builder /build/ascii2gsm /build/gsm2ascii /usr/local/bin/
 
-VOLUME /var/spool/sms/
-ENV POSITIONS /var/spool/sms/positions.json
+VOLUME /data
+ENV POSITIONS /data/positions.json
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
