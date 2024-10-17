@@ -4,6 +4,8 @@ ACTION=$1
 
 exec 3<>/dev/ttyUSB1
 
+echo "$0: $*" >&2
+
 com() {
     printf '%s\r' "$1" >&3
     while read -r -t1 -u 3 OUT; do

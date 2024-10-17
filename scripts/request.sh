@@ -6,7 +6,7 @@ TMP=$(mktemp)
 
 umask 022
 
-sms.sh SEND "${NUMBER:?}" "${PASSWORD:?}"
+sms.sh SEND "+${NUMBER:?}" "${PASSWORD:?}"
 
 jq -c \
     --arg number "$NUMBER" \
