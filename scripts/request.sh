@@ -6,6 +6,7 @@ TMP=$(mktemp)
 
 umask 022
 
+echo "SMS send to $NUMBER" >&2
 sms.sh SEND "+${NUMBER:?}" "${PASSWORD:?}"
 
 jq -c \

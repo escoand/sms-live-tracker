@@ -22,8 +22,9 @@ sms.sh RECEIVE |
             ID=$(echo "$MSG" | awk -F':' '$1=="ID" { print $2 }')
 
             [ ! "$ID" ] && unset MSGID NUMBER && continue
+            echo "SMS received from $NUMBER: lon=$LON lat=$LAT ts=$DATETIME bat=$BATTERY" >&2
 
-            [ "$LAT" ] && [ "$LON" ] && COORDS="[$LAT,$LON]" || COORDS="[]"
+            [ "$LAT" ] && [ "$LON" ] && COORDS="[$LON,$LAT]" || COORDS="[]"
             jq -c \
                 --arg number "$NUMBER" \
                 --argjson coords "$COORDS" \
