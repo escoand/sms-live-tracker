@@ -1,11 +1,21 @@
-mapboxgl.accessToken =
-  "pk.eyJ1IjoicGFzc3RzY2h1IiwiYSI6ImFwSFVvOVEifQ.djLlizVZhCdi5FCSB3U9OA";
+maptilersdk.config.apiKey = "WhAMg18w38LHuVYEtZE9";
 
 const colors = [
-  "hsl",
-  ["%", ["*", ["to-number", ["get", "name"]], 137.508], 360],
-  100,
-  50,
+  "interpolate",
+  ["linear"],
+  ["/", ["-", ["to-number", ["get", "name"]], 19], 15],
+  0.0,
+  "blue",
+  0.1,
+  "royalblue",
+  0.3,
+  "cyan",
+  0.5,
+  "lime",
+  0.7,
+  "yellow",
+  1.0,
+  "red",
 ];
 const layers = [
   // route lines
@@ -18,19 +28,20 @@ const layers = [
       "line-join": "round",
     },
     paint: {
-      //"line-color": colors,
+      "line-color": ["get", "color"],
+      "line-opacity": 0.75,
       "line-width": 5,
-      "line-opacity": 0.5,
     },
   },
-  // route pois
+  // route points
   {
-    id: "routes-pois",
+    id: "routes-points",
     source: "routes",
     type: "circle",
     filter: ["==", ["geometry-type"], "Point"],
     paint: {
       "circle-color": ["get", "color"],
+      "circle-opacity": 0.75,
     },
   },
   // route text
@@ -43,6 +54,9 @@ const layers = [
       "text-anchor": "bottom",
       "text-field": ["get", "name"],
       "text-offset": [0, -0.5],
+    },
+    paint: {
+      "text-color": ["get", "color"],
     },
   },
   // tracker icons
@@ -72,22 +86,21 @@ const layers = [
   },
 ];
 
-window.addEventListener("load", () => {
-  new mapboxgl.Map({
+window.addEventListener("load", () =>
+  new maptilersdk.Map({
     container: "map",
-    style: "mapbox://styles/mapbox/outdoors-v12",
+    style: maptilersdk.MapStyle.TOPO,
     center: [0, 0],
-  }).on("load", initMap);
-});
+  }).on("load", initMap)
+);
 
 const initMap = (evt) => {
   map = evt.target;
 
   // add controls
-  map.addControl(new mapboxgl.FullscreenControl());
-  map.addControl(new mapboxgl.GeolocateControl());
-  map.addControl(new mapboxgl.NavigationControl());
-  map.addControl(new mapboxgl.ScaleControl());
+  map.addControl(new maptilersdk.FullscreenControl());
+  map.addControl(new maptilersdk.GeolocateControl());
+  map.addControl(new maptilersdk.ScaleControl());
   map.addControl(
     {
       onAdd: (map) => {
@@ -102,7 +115,7 @@ const initMap = (evt) => {
         head.appendChild(document.createElement("th")).innerHTML = "&#128229;";
         head.appendChild(document.createElement("th"));
 
-        container.className = "mapboxgl-ctrl mapboxgl-ctrl-group";
+        container.className = "maplibregl-ctrl maplibregl-ctrl-group";
         toggle.addEventListener("click", () => {
           body.style.display = body.style.display == "none" ? "" : "none";
         });
@@ -149,10 +162,11 @@ const addRoutes = (map) => {
     .then((json) => {
       map.getSource("routes").setData(json);
       const bounds = json.features
-        .filter((f) => f.geometry.type == "LineString")
         .flatMap((feature) =>
           feature.geometry.type == "LineString"
             ? feature.geometry.coordinates
+            : feature.geometry.type == "MultiLineString"
+            ? feature.geometry.coordinates.flat()
             : feature.geometry.type == "Point"
             ? [feature.geometry.coordinates]
             : []
@@ -173,7 +187,7 @@ const addRoutes = (map) => {
             [Number.MIN_VALUE, Number.MIN_VALUE],
           ]
         );
-      map.fitBounds(bounds, { padding: 10 });
+      map.fitBounds(bounds, { padding: 50 });
     });
 };
 
