@@ -99,7 +99,8 @@ const initMap = (evt) => {
 
   // add controls
   map.addControl(new maptilersdk.FullscreenControl());
-  map.addControl(new maptilersdk.GeolocateControl());
+  //map.addControl(new maptilersdk.GeolocateControl());
+  //map.addControl(new maptilersdk.NavigationControl());
   map.addControl(new maptilersdk.ScaleControl());
   map.addControl(
     {
