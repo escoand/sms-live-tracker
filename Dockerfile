@@ -24,5 +24,6 @@ COPY --from=builder /build/ascii2gsm /build/gsm2ascii /usr/local/bin/
 
 VOLUME /data
 ENV POSITIONS /data/positions.json
+ENV DEVICE    /dev/ttyUSB1
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

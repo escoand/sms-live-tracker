@@ -2,7 +2,7 @@
 
 ACTION=$1
 
-exec 3<>/dev/ttyUSB1
+exec 3<>"$DEVICE"
 
 com() {
     printf '%s\r' "$1" >&3
