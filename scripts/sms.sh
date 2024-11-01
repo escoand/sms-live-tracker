@@ -7,10 +7,9 @@ exec 3<>"$DEVICE"
 com() {
     [ -n "$DEBUG" ] && printf ">> %s\n" "$1" | tr -d '\r' >&2
     printf '%s\r' "$1" >&3
-    while read -r -t1 -u3 OUT; do
-        [ -n "$DEBUG" ] && printf "<< %s\n" "$OUT" | tr -d '\r' >&2
-        printf %s "$OUT"
-    done
+    read -r -t1 -u3 OUT
+    [ -n "$DEBUG" ] && printf "<< %s\n" "$OUT" | tr -d '\r' >&2
+    printf %s "$OUT"
 }
 
 # init
