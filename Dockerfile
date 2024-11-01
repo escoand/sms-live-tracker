@@ -12,6 +12,7 @@ RUN apk --no-cache add \
         coreutils \
         fcgiwrap \
         jq \
+        ncurses \
         nginx \
         spawn-fcgi \
         usb-modeswitch && \
