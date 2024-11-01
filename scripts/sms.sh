@@ -5,16 +5,25 @@ ACTION=$1
 exec 3<>"$DEVICE"
 
 com() {
+    [ -n "$DEBUG" ] && printf ">> %s\n" "$1" | tr -d '\r' >&2
     printf '%s\r' "$1" >&3
-    while read -r -t1 -u 3 OUT; do
+    while read -r -t1 -u3 OUT; do
+        [ -n "$DEBUG" ] && printf "<< %s\n" "$OUT" | tr -d '\r' >&2
         printf %s "$OUT"
     done
 }
 
+# init
+if ! com "AT" | grep -q OK; then
+    tput reset >&3
+    com "AT" | grep -q OK
+fi
+com "AT+CMEE=1"
+
 # pin
 com AT+CPIN? |
     grep -q "+CPIN: SIM PIN" &&
-    com "AT+CPIN=$PIN"
+    com "AT+CPIN=$PIN" | grep -q OK
 
 # send sms
 if [ "$ACTION" = SEND ]; then

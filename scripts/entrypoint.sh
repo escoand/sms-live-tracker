@@ -6,6 +6,7 @@ POSFILE=${POSITIONS##*/}
 # init env
 chown -R fcgiwrap:www-data "$POSDIR"
 chmod 2755 "$POSDIR"
+[ ! -f "$POSITIONS" ] && printf "{}" > "$POSITIONS"
 chmod 0644 "$POSITIONS"
 
 # start frontend
@@ -14,7 +15,7 @@ spawn-fcgi -f "/usr/bin/fcgiwrap -f" -s /tmp/fcgiwrap.sock -u fcgiwrap -U nginx
 nginx
 
 # start backend
-usb_modeswitch -v 19d2 -p 0031 || true
+usb_modeswitch -v 19d2 -p 0031 -s 10 || true
 while true; do
     receive.sh
     sleep 30

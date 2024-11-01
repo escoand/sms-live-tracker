@@ -5,6 +5,7 @@ TMP=$(mktemp)
 umask 022
 
 sms.sh RECEIVE |
+    tr '\r' '\n' |
     while read -r KEY VALUE; do
 
         if [ "$KEY" = MSGID ]; then
