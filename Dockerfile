@@ -1,10 +1,3 @@
-FROM alpine:3.20.3 AS builder
-
-COPY xdsopl /build
-RUN apk --no-cache add gcc make musl-dev && \
-    cd /build && \
-    make all
-
 FROM alpine:3.20.3
 
 RUN apk --no-cache add \
@@ -12,16 +5,16 @@ RUN apk --no-cache add \
         coreutils \
         fcgiwrap \
         jq \
-        ncurses \
         nginx \
+        smstools \
         spawn-fcgi \
         usb-modeswitch && \
-    addgroup fcgiwrap audio
+    addgroup smsd audio
 
 COPY scripts/   /usr/local/bin/
 COPY www/       /var/www/html/
 COPY nginx.conf /etc/nginx/http.d/default.conf
-COPY --from=builder /build/ascii2gsm /build/gsm2ascii /usr/local/bin/
+COPY smsd.conf  /etc/smsd.conf
 
 VOLUME /data
 ENV POSITIONS /data/positions.json
