@@ -17,7 +17,8 @@ COPY nginx.conf /etc/nginx/http.d/default.conf
 COPY smsd.conf  /etc/smsd.conf
 
 VOLUME /data
-ENV POSITIONS /data/positions.json
-ENV DEVICE    /dev/ttyUSB1
+ENV CONTAINER_NAME tracker
+ENV DEVICE         /dev/ttyUSB1
+ENV POSITIONS      /data/positions.json
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
