@@ -20,7 +20,7 @@ chmod 2755 "$POSDIR"
 chmod 0644 "$POSITIONS"
 
 # start frontend
-sed -i "s|{POSITIONS_DIR}|$POSDIR|; s|{POSITIONS_FILE}|$POSFILE|" /etc/nginx/http.d/default.conf
+sed -i "s|{CONTAINER_NAME}|$CONTAINER_NAME|; s|{POSITIONS_DIR}|$POSDIR|; s|{POSITIONS_FILE}|$POSFILE|" /etc/nginx/http.d/default.conf
 spawn-fcgi -f "/usr/bin/fcgiwrap -f" -s /tmp/fcgiwrap.sock -u fcgiwrap -U nginx
 nginx
 
