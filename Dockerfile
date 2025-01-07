@@ -1,4 +1,4 @@
-FROM alpine:3.20.3
+FROM alpine:3.21.1
 
 RUN apk --no-cache add \
         bash=5.2.26-r0 \
