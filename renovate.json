@@ -4,5 +4,25 @@
     "config:recommended",
     "docker:enableMajor",
     "regexManagers:dockerfileVersions"
+  ],
+  "regexManagers": [
+    {
+      "fileMatch": ["^Dockerfile$"],
+      "matchStringsStrategy": "any",
+      "matchStrings": [
+        "\\s+(?<package>[a-z0-9][a-z0-9-_]+)=(?<currentValue>[a-z0-9-_.]+)\\s+"
+      ],
+      "versioningTemplate": "loose",
+      "datasourceTemplate": "repology",
+      "depNameTemplate": "alpine_3_21/{{package}}"
+    }
+  ],
+  "packageRules": [
+    {
+      "groupName": "Docker",
+      "matchDatasources": ["repology"],
+      "matchPackagePatterns": ["^alpine_.*/docker.*$"],
+      "automerge": true
+    }
   ]
 }
