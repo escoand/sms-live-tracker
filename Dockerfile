@@ -1,7 +1,7 @@
 FROM alpine:3.20.3
 
 RUN apk --no-cache add \
-        bash=5.2.26-r0 \
+        bash=5.2.37-r0 \
         coreutils=9.5-r2 \
         fcgiwrap=1.1.0-r8 \
         jq=1.7.1-r0 \
