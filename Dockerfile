@@ -1,4 +1,4 @@
-FROM alpine:3.21.1
+FROM alpine:3.21.2
 
 RUN apk --no-cache add \
         bash=5.2.37-r0 \
