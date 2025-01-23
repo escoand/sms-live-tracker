@@ -1,26 +1,68 @@
 variant: fcos
 version: 1.6.0
+passwd:
+  users:
+    - name: admin
+      ssh_authorized_keys:
+        - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDp7Ij6tMK/6enpXE6qftq5PmPZL9HT6/iO975Bt9UjUezptGHIjh1hQ1z2ZOvC9r/Yuvu6X7g3PntFadwE5LMrmBL8Wte5unIcWLORoH7ha1lGDuOWKVyfuuhDzZ9aUHFMQ2hmFzShEHACub/gIAqLIGjQUlNykK32mGz8YSFh4FBELmDWbZXK7hmA34l4I1Hojd/nN0IZk4qQHVVNoUdzy77ZLO6sJbtlOD8SoQqaS0PRg+KFtG/LlKW1jTTUL4YXI80swNMPtyquXgRa+cn6EbdxMTJkmbQMS9fttLneOdPL5DGKu/2cRNjEM+FbIQtFePr1dEicNxMw7UdlRrRj
+storage:
+  files:
+    # keyboard layout
+    - path: /etc/vconsole.conf
+      mode: 0644
+      contents:
+        inline: KEYMAP=de
+    # sms live tracker container
+    - path: /etc/containers/systemd/sms-live-tracker.container
+      contents:
+        inline: |
+          [Unit]
+          Description=SMS Tracker Dashboard
+          Wants=network-online.target
+          After=network-online.target
+
+          [Container]
+          AddDevice=/dev/ttyUSB0:/dev/ttyUSB0
+          AddDevice=/dev/ttyUSB1:/dev/ttyUSB1
+          AddDevice=/dev/ttyUSB2:/dev/ttyUSB2
+          ContainerName=sms-live-tracker
+          Environment=CONTAINER_NAME=sms-live-tracker
+          Publish=8080:80
+          Secret=TRACKER_PASSWORD,type=env,target=PASSWORD
+          Secret=TRACKER_PIN,type=env,target=PIN
+          Volume=smstracker:/data
+          Volume=smstracker-tmp:/var/spool/sms
+
+          [Service]
+          Restart=always
+
+          [Install]
+          WantedBy=multi-user.target
 systemd:
   units:
-    - name: sms-live-tracker.service
+    # install tools
+    - name: install-tools.service
       enabled: true
       contents: |
         [Unit]
-        Description=SMS Tracker Dashboard
-
-        [Container]
-        AddDevice=/dev/ttyUSB0:/dev/ttyUSB0
-        AddDevice=/dev/ttyUSB1:/dev/ttyUSB1
-        AddDevice=/dev/ttyUSB2:/dev/ttyUSB2
-        Volume=smstracker:/data
-        Volume=smstracker-tmp:/var/spool/sms
+        Description=Install tools
+        Wants=network-online.target
+        After=network-online.target
+        # We run before `zincati.service` to avoid conflicting rpm-ostree
+        # transactions.
+        Before=zincati.service
+        ConditionPathExists=!/var/lib/%N.stamp
 
         [Service]
-        ExecStartPre=-/bin/podman kill sms-live-tracker
-        ExecStartPre=-/bin/podman rm sms-live-tracker
-        ExecStartPre=/bin/podman build --tag sms-live-tracker https://github.com/escoand/sms-live-tracker
-        ExecStart=/bin/podman run --name sms-live-tracker --env CONTAINER_NAME=sms-live-tracker --publish 8080:80 --secret TRACKER_PIN,type=env,target=PIN --secret TRACKER_PASSWORD,type=env,target=PASSWORD sms-live-tracker
-        Restart=always
+        Type=oneshot
+        RemainAfterExit=yes
+        # `--allow-inactive` ensures that rpm-ostree does not return an error
+        # if the package is already installed. This is useful if the package is
+        # added to the root image in a future Fedora CoreOS release as it will
+        # prevent the service from failing.
+        ExecStart=/usr/bin/rpm-ostree install -y --allow-inactive cockpit-system cockpit-ostree cockpit-podman
+        ExecStart=/bin/touch /var/lib/%N.stamp
+        ExecStart=/bin/systemctl --no-block reboot
 
         [Install]
-        WantedBy=multi-user.target default.target
+        WantedBy=multi-user.target
