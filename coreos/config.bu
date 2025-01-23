@@ -1,0 +1,26 @@
+variant: fcos
+version: 1.6.0
+systemd:
+  units:
+    - name: sms-live-tracker.service
+      enabled: true
+      contents: |
+        [Unit]
+        Description=SMS Tracker Dashboard
+
+        [Container]
+        AddDevice=/dev/ttyUSB0:/dev/ttyUSB0
+        AddDevice=/dev/ttyUSB1:/dev/ttyUSB1
+        AddDevice=/dev/ttyUSB2:/dev/ttyUSB2
+        Volume=smstracker:/data
+        Volume=smstracker-tmp:/var/spool/sms
+
+        [Service]
+        ExecStartPre=-/bin/podman kill sms-live-tracker
+        ExecStartPre=-/bin/podman rm sms-live-tracker
+        ExecStartPre=/bin/podman build --tag sms-live-tracker https://github.com/escoand/sms-live-tracker
+        ExecStart=/bin/podman run --name sms-live-tracker --env CONTAINER_NAME=sms-live-tracker --publish 8080:80 --secret TRACKER_PIN,type=env,target=PIN --secret TRACKER_PASSWORD,type=env,target=PASSWORD sms-live-tracker
+        Restart=always
+
+        [Install]
+        WantedBy=multi-user.target default.target
