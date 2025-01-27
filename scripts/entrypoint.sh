@@ -27,15 +27,15 @@ nginx
 
 # modeswitch
 if [ -n "$MODESWITCH_VENDOR" ] && [ -n "$MODESWITCH_PRODUCT" ]; then
-    unset ARGS
+    set --
     # shellcheck disable=SC2089
-    [ -n "$MODESWITCH_MSG1" ] && ARGS="$ARGS -M '$MODESWITCH_MSG1'"
-    [ -n "$MODESWITCH_MSG2" ] && ARGS="$ARGS -2 '$MODESWITCH_MSG2'"
-    [ -n "$MODESWITCH_MSG3" ] && ARGS="$ARGS -3 '$MODESWITCH_MSG3'"
-    [ -n "$MODESWITCH_TARGET_VENDOR" ] && ARGS="$ARGS -V '$MODESWITCH_TARGET_VENDOR'"
-    [ -n "$MODESWITCH_TARGET_PRODUCT" ] && ARGS="$ARGS -P '$MODESWITCH_TARGET_PRODUCT'"
+    [ -n "$MODESWITCH_MSG1" ] && set -- "$@" -M "$MODESWITCH_MSG1"
+    [ -n "$MODESWITCH_MSG2" ] && set -- "$@" -2 "$MODESWITCH_MSG2"
+    [ -n "$MODESWITCH_MSG3" ] && set -- "$@" -3 "$MODESWITCH_MSG3"
+    [ -n "$MODESWITCH_TARGET_VENDOR" ] && set -- "$@" -V "$MODESWITCH_TARGET_VENDOR"
+    [ -n "$MODESWITCH_TARGET_PRODUCT" ] && set -- "$@" -P "$MODESWITCH_TARGET_PRODUCT"
     # shellcheck disable=SC2086,SC2090
-    usb_modeswitch -s 10 -v "$MODESWITCH_VENDOR" -p "$MODESWITCH_PRODUCT" $ARGS
+    usb_modeswitch -s 10 -v "$MODESWITCH_VENDOR" -p "$MODESWITCH_PRODUCT" "$@"
 fi
 
 # start backend
