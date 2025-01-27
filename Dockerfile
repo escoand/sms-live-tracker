@@ -17,7 +17,6 @@ COPY nginx.conf /etc/nginx/http.d/default.conf
 COPY smsd.conf  /etc/smsd.conf
 
 VOLUME /data
-ENV CONTAINER_NAME tracker
 ENV DEVICE         /dev/ttyUSB1
 ENV POSITIONS      /data/positions.json
 

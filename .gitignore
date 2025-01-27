@@ -2,3 +2,7 @@
 /data/
 /run.sh
 /www/*.json
+
+*.bin
+*.dtb
+*.img

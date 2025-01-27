@@ -1,5 +1,6 @@
 #!/bin/sh -e
 
+CONTAINER_NAME=${CONTAINER_NAME:-$(hostname)}
 POSDIR=${POSITIONS%/*}
 POSFILE=${POSITIONS##*/}
 
@@ -24,7 +25,15 @@ sed -i "s|{CONTAINER_NAME}|$CONTAINER_NAME|; s|{POSITIONS_DIR}|$POSDIR|; s|{POSI
 spawn-fcgi -f "/usr/bin/fcgiwrap -f" -s /tmp/fcgiwrap.sock -u fcgiwrap -U nginx
 nginx
 
+# modeswitch
+if [ -n "$MODESWITCH_VENDOR" ] && [ -n "$MODESWITCH_PRODUCT" ] && [ -n "$MODESWITCH_MSG1" ] && [ -n "$MODESWITCH_MSG2" ]; then
+    usb_modeswitch -v "$MODESWITCH_VENDOR" -p "$MODESWITCH_PRODUCT" -M "$MODESWITCH_MSG1" -2 "$MODESWITCH_MSG2"
+elif [ -n "$MODESWITCH_VENDOR" ] && [ -n "$MODESWITCH_PRODUCT" ] && [ -n "$MODESWITCH_MSG1" ]; then
+    usb_modeswitch -v "$MODESWITCH_VENDOR" -p "$MODESWITCH_PRODUCT" -M "$MODESWITCH_MSG1"
+elif [ -n "$MODESWITCH_VENDOR" ] && [ -n "$MODESWITCH_PRODUCT" ]; then
+    usb_modeswitch -v "$MODESWITCH_VENDOR" -p "$MODESWITCH_PRODUCT"
+fi
+
 # start backend
 sed -i "s|{DEVICE}|$DEVICE|; s|{PIN}|$PIN|" /etc/smsd.conf
-usb_modeswitch -v 19d2 -p 0031 -s 10 || true
 exec /usr/sbin/smsd
