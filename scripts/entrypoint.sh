@@ -26,12 +26,16 @@ spawn-fcgi -f "/usr/bin/fcgiwrap -f" -s /tmp/fcgiwrap.sock -u fcgiwrap -U nginx
 nginx
 
 # modeswitch
-if [ -n "$MODESWITCH_VENDOR" ] && [ -n "$MODESWITCH_PRODUCT" ] && [ -n "$MODESWITCH_MSG1" ] && [ -n "$MODESWITCH_MSG2" ]; then
-    usb_modeswitch -v "$MODESWITCH_VENDOR" -p "$MODESWITCH_PRODUCT" -M "$MODESWITCH_MSG1" -2 "$MODESWITCH_MSG2"
-elif [ -n "$MODESWITCH_VENDOR" ] && [ -n "$MODESWITCH_PRODUCT" ] && [ -n "$MODESWITCH_MSG1" ]; then
-    usb_modeswitch -v "$MODESWITCH_VENDOR" -p "$MODESWITCH_PRODUCT" -M "$MODESWITCH_MSG1"
-elif [ -n "$MODESWITCH_VENDOR" ] && [ -n "$MODESWITCH_PRODUCT" ]; then
-    usb_modeswitch -v "$MODESWITCH_VENDOR" -p "$MODESWITCH_PRODUCT"
+if [ -n "$MODESWITCH_VENDOR" ] && [ -n "$MODESWITCH_PRODUCT" ]; then
+    unset ARGS
+    # shellcheck disable=SC2089
+    [ -n "$MODESWITCH_MSG1" ] && ARGS="$ARGS -M '$MODESWITCH_MSG1'"
+    [ -n "$MODESWITCH_MSG2" ] && ARGS="$ARGS -2 '$MODESWITCH_MSG2'"
+    [ -n "$MODESWITCH_MSG3" ] && ARGS="$ARGS -3 '$MODESWITCH_MSG3'"
+    [ -n "$MODESWITCH_TARGET_VENDOR" ] && ARGS="$ARGS -V '$MODESWITCH_TARGET_VENDOR'"
+    [ -n "$MODESWITCH_TARGET_PRODUCT" ] && ARGS="$ARGS -P '$MODESWITCH_TARGET_PRODUCT'"
+    # shellcheck disable=SC2086,SC2090
+    usb_modeswitch -s 10 -v "$MODESWITCH_VENDOR" -p "$MODESWITCH_PRODUCT" $ARGS
 fi
 
 # start backend
