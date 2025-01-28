@@ -18,17 +18,18 @@ else
 fi
 
 # ignition
-podman run --rm -i -v .:/data:ro quay.io/coreos/butane:release \
+podman run --rm -i -v .:/data:ro \
+    quay.io/coreos/butane:release \
     --pretty --strict --files-dir /data <coreos/config.bu >coreos/config.ign
 
 # install coreos
-sudo podman run --rm --privileged -i -v /dev:/dev -v /run/udev:/run/udev -v .:/data:ro -v /etc/NetworkManager/system-connections:/nm:ro \
+sudo podman run --rm --privileged -v /dev:/dev -v /run/udev:/run/udev -v .:/data:ro \
     quay.io/coreos/coreos-installer:release \
-    install -a "$ARCH" -i /data/coreos/config.ign -n --network-dir /nm "$DEV"
+    install -a "$ARCH" -i /data/coreos/config.ign "$DEV"
 
 # get firmware
-if [ "$ARCH" = aarch64 ]; then
-    podman run --rm -i -v "$TMP":/data:z fedora:40 \
+if [ "$MACHINE" = rpi ]; then
+    podman run --rm -v "$TMP":/data:z fedora:40 \
         dnf install --downloadonly -y --forcearch=aarch64 --destdir=/data uboot-images-armv8 bcm283x-firmware bcm283x-overlays
     for RPM in "$TMP"/*.rpm; do
         rpm2cpio "$RPM" | cpio -id -D "$TMP"

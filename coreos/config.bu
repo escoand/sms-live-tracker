@@ -12,6 +12,7 @@ passwd:
         - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDRLWPBKT1/DVBg4RkwCxF/S00fl/NHEAWf+T+2a0/gM8mYd2KZKUqHAgLMk1v/2mExifBW/LT/vtQnD89bxHOpDP+jxjfYLDMoli05vfn/hwImte/lGbNPY6gZjTUm7ujcz8c0aoNUOO7WAlvkqPZi2+bFq+9YiVCiIVpy9vefgjqcFRZXVow1PSin/Kp3SxuPY1BniVm7ZdkENdnisbM5yCCOxzLNbGVDMWE9lhHgdtp629UBJ30cWW4Zn/oBKkLgoRZ1zkAjEyc1yBUWnkZJnbyQ4T0EJmHWcd9TqlpFi2P313QrTa0se1Xw2PzOhIs/UnIFflDe0sY4Gq0s0TVV
 systemd:
   units:
+    # podman socket
     - name: podman.socket
       enabled: true
       contents: |
@@ -25,6 +26,26 @@ systemd:
 
         [Install]
         WantedBy=sockets.target
+    # install wifi
+    - name: install-wifi.service
+      enabled: true
+      contents: |
+        [Unit]
+        Description=Install Wi-Fi
+        Wants=network-online.target
+        After=network-online.target
+        Before=zincati.service
+        ConditionPathExists=!/var/lib/%N.stamp
+
+        [Service]
+        Type=oneshot
+        RemainAfterExit=yes
+        ExecStart=/usr/bin/rpm-ostree install -y --allow-inactive NetworkManager-wifi brcmfmac-firmware
+        ExecStart=/bin/touch /var/lib/%N.stamp
+        ExecStart=/bin/systemctl --no-block reboot
+
+        [Install]
+        WantedBy=multi-user.target
 storage:
   disks:
     - device: /dev/disk/by-id/coreos-boot-disk
@@ -41,12 +62,10 @@ storage:
       device: /dev/disk/by-partlabel/data
       format: ext4
       with_mount_unit: true
+  links:
+    - path: /etc/localtime
+      target: ../usr/share/zoneinfo/Europe/Berlin
   files:
-    # keyboard layout
-    - path: /etc/vconsole.conf
-      mode: 0644
-      contents:
-        inline: KEYMAP=de
     # sms live tracker container
     - path: /etc/containers/systemd/sms-live-tracker.build
       contents:
@@ -96,3 +115,23 @@ storage:
       overwrite: true
       contents:
         local: routes.json
+    # keyboard layout
+    - path: /etc/vconsole.conf
+      mode: 0644
+      contents:
+        inline: KEYMAP=de
+    # maintenance window
+    - path: /etc/zincati/config.d/55-updates-strategy.toml
+      contents:
+        inline: |
+          [updates]
+          strategy = "periodic"
+          [[updates.periodic.window]]
+          days = [ "Sun" ]
+          start_time = "04:00"
+          length_minutes = 60
+    # wifi
+    - path: /etc/NetworkManager/system-connections/wifi.nmconnection
+      mode: 0600
+      contents:
+        local: wifi.conf
