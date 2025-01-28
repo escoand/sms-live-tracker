@@ -14,7 +14,7 @@ if [ "$MACHINE" = rpi ]; then
         \
         -drive "if=sd,format=raw,file=$IMG" -snapshot \
         \
-        -netdev user,id=net0,hostfwd=tcp::2222-:22 \
+        -netdev user,id=net0,hostfwd=tcp::2222-:22,hostfwd=tcp::8080-:8080 \
         -device usb-net,netdev=net0 \
         \
         -serial mon:stdio -nographic \
@@ -26,7 +26,7 @@ else
         -hda "$IMG" -snapshot \
         -device usb-host -usb \
         \
-        -netdev user,id=net0,hostfwd=tcp::2222-:22 \
+        -netdev user,id=net0,hostfwd=tcp::2222-:22,hostfwd=tcp::8080-:8080 \
         -device usb-net,netdev=net0
 
 fi

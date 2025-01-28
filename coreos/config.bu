@@ -10,6 +10,21 @@ passwd:
       ssh_authorized_keys:
         - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDp7Ij6tMK/6enpXE6qftq5PmPZL9HT6/iO975Bt9UjUezptGHIjh1hQ1z2ZOvC9r/Yuvu6X7g3PntFadwE5LMrmBL8Wte5unIcWLORoH7ha1lGDuOWKVyfuuhDzZ9aUHFMQ2hmFzShEHACub/gIAqLIGjQUlNykK32mGz8YSFh4FBELmDWbZXK7hmA34l4I1Hojd/nN0IZk4qQHVVNoUdzy77ZLO6sJbtlOD8SoQqaS0PRg+KFtG/LlKW1jTTUL4YXI80swNMPtyquXgRa+cn6EbdxMTJkmbQMS9fttLneOdPL5DGKu/2cRNjEM+FbIQtFePr1dEicNxMw7UdlRrRj
         - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDRLWPBKT1/DVBg4RkwCxF/S00fl/NHEAWf+T+2a0/gM8mYd2KZKUqHAgLMk1v/2mExifBW/LT/vtQnD89bxHOpDP+jxjfYLDMoli05vfn/hwImte/lGbNPY6gZjTUm7ujcz8c0aoNUOO7WAlvkqPZi2+bFq+9YiVCiIVpy9vefgjqcFRZXVow1PSin/Kp3SxuPY1BniVm7ZdkENdnisbM5yCCOxzLNbGVDMWE9lhHgdtp629UBJ30cWW4Zn/oBKkLgoRZ1zkAjEyc1yBUWnkZJnbyQ4T0EJmHWcd9TqlpFi2P313QrTa0se1Xw2PzOhIs/UnIFflDe0sY4Gq0s0TVV
+systemd:
+  units:
+    - name: podman.socket
+      enabled: true
+      contents: |
+        [Unit]
+        Description=Podman API Socket
+        Documentation=man:podman-system-service(1)
+
+        [Socket]
+        ListenStream=%t/podman/podman.sock
+        SocketMode=0666
+
+        [Install]
+        WantedBy=sockets.target
 storage:
   disks:
   - device: /dev/disk/by-id/coreos-boot-disk
@@ -60,6 +75,7 @@ storage:
           PublishPort=8080:80
           Pull=never
           Volume=/dev:/dev
+          Volume=%t/podman/podman.sock:/var/run/docker.sock:ro
           Volume=smstracker:/data
           Volume=smstracker-tmp:/var/spool/sms
 
