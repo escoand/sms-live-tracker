@@ -37,6 +37,7 @@ if [ -n "$MODESWITCH_VENDOR" ] && [ -n "$MODESWITCH_PRODUCT" ]; then
     # shellcheck disable=SC2086,SC2090
     usb_modeswitch -s 10 -v "$MODESWITCH_VENDOR" -p "$MODESWITCH_PRODUCT" "$@"
     set --
+    sleep 3
 fi
 
 # start backend
