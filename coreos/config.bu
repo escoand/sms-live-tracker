@@ -27,15 +27,15 @@ systemd:
         WantedBy=sockets.target
 storage:
   disks:
-  - device: /dev/disk/by-id/coreos-boot-disk
-    wipe_table: false
-    partitions:
-    - number: 4
-      label: root
-      size_mib: 8192
-      resize: true
-    - size_mib: 0
-      label: data
+    - device: /dev/disk/by-id/coreos-boot-disk
+      wipe_table: false
+      partitions:
+        - number: 4
+          label: root
+          size_mib: 8192
+          resize: true
+        - size_mib: 0
+          label: data
   filesystems:
     - path: /var/lib/containers/storage/volumes
       device: /dev/disk/by-partlabel/data
@@ -87,12 +87,12 @@ storage:
     # sms live tracker environment
     - path: /etc/sms-live-tracker.env
       contents:
-        local: coreos/env
-    #- path: /var/lib/containers/storage/volumes/smstracker/_data/positions.json
-    #  contents:
-    #    local: data/positions.json
-    #  overwrite: true
-    #- path: /var/lib/containers/storage/volumes/smstracker/_data/routes.json
-    #  contents:
-    #    local: data/routes.json
-    #  overwrite: true
+        local: env
+    - path: /var/lib/containers/storage/volumes/smstracker/_data/positions.json
+      overwrite: true
+      contents:
+        local: positions.json
+    - path: /var/lib/containers/storage/volumes/smstracker/_data/routes.json
+      overwrite: true
+      contents:
+        local: routes.json

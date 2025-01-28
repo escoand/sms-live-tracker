@@ -1,9 +1,10 @@
 /coreos/config.ign
 /data/
+/env
 /run.sh
-/www/*.json
+/www/
 
 *.bin
 *.dtb
 *.img
-env
+*.json
