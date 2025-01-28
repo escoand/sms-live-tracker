@@ -3,9 +3,29 @@ version: 1.6.0
 passwd:
   users:
     - name: admin
+      # mkpasswd --method=yescrypt
+      password_hash: $y$j9T$4vt5oXpo1IQihDOHsXMit.$LOkcKOcWwZ2BGNeMzh6.WqHFkUXmh2mM3GHkiEBapE7
+      groups:
+        - wheel
       ssh_authorized_keys:
         - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDp7Ij6tMK/6enpXE6qftq5PmPZL9HT6/iO975Bt9UjUezptGHIjh1hQ1z2ZOvC9r/Yuvu6X7g3PntFadwE5LMrmBL8Wte5unIcWLORoH7ha1lGDuOWKVyfuuhDzZ9aUHFMQ2hmFzShEHACub/gIAqLIGjQUlNykK32mGz8YSFh4FBELmDWbZXK7hmA34l4I1Hojd/nN0IZk4qQHVVNoUdzy77ZLO6sJbtlOD8SoQqaS0PRg+KFtG/LlKW1jTTUL4YXI80swNMPtyquXgRa+cn6EbdxMTJkmbQMS9fttLneOdPL5DGKu/2cRNjEM+FbIQtFePr1dEicNxMw7UdlRrRj
+        - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDRLWPBKT1/DVBg4RkwCxF/S00fl/NHEAWf+T+2a0/gM8mYd2KZKUqHAgLMk1v/2mExifBW/LT/vtQnD89bxHOpDP+jxjfYLDMoli05vfn/hwImte/lGbNPY6gZjTUm7ujcz8c0aoNUOO7WAlvkqPZi2+bFq+9YiVCiIVpy9vefgjqcFRZXVow1PSin/Kp3SxuPY1BniVm7ZdkENdnisbM5yCCOxzLNbGVDMWE9lhHgdtp629UBJ30cWW4Zn/oBKkLgoRZ1zkAjEyc1yBUWnkZJnbyQ4T0EJmHWcd9TqlpFi2P313QrTa0se1Xw2PzOhIs/UnIFflDe0sY4Gq0s0TVV
 storage:
+  disks:
+  - device: /dev/disk/by-id/coreos-boot-disk
+    wipe_table: false
+    partitions:
+    - number: 4
+      label: root
+      size_mib: 8192
+      resize: true
+    - size_mib: 0
+      label: data
+  filesystems:
+    - path: /var/lib/containers/storage/volumes
+      device: /dev/disk/by-partlabel/data
+      format: ext4
+      with_mount_unit: true
   files:
     # keyboard layout
     - path: /etc/vconsole.conf
@@ -13,23 +33,33 @@ storage:
       contents:
         inline: KEYMAP=de
     # sms live tracker container
+    - path: /etc/containers/systemd/sms-live-tracker.build
+      contents:
+        inline: |
+          [Unit]
+          Requires=network-online.target
+          After=network-online.target
+
+          [Build]
+          ImageTag=sms-live-tracker
+          SetWorkingDirectory=https://github.com/escoand/sms-live-tracker.git
     - path: /etc/containers/systemd/sms-live-tracker.container
       contents:
         inline: |
           [Unit]
           Description=SMS Tracker Dashboard
-          Wants=network-online.target
-          After=network-online.target
+          Requires=sms-live-tracker-build.service
+          After=sms-live-tracker-build.service
 
           [Container]
-          AddDevice=/dev/ttyUSB0:/dev/ttyUSB0
-          AddDevice=/dev/ttyUSB1:/dev/ttyUSB1
-          AddDevice=/dev/ttyUSB2:/dev/ttyUSB2
           ContainerName=sms-live-tracker
-          Environment=CONTAINER_NAME=sms-live-tracker
-          Publish=8080:80
-          Secret=TRACKER_PASSWORD,type=env,target=PASSWORD
-          Secret=TRACKER_PIN,type=env,target=PIN
+          EnvironmentFile=/etc/sms-live-tracker.env
+          HostName=sms-live-tracker
+          Image=sms-live-tracker
+          PodmanArgs=--privileged
+          PublishPort=8080:80
+          Pull=never
+          Volume=/dev:/dev
           Volume=smstracker:/data
           Volume=smstracker-tmp:/var/spool/sms
 
@@ -38,31 +68,15 @@ storage:
 
           [Install]
           WantedBy=multi-user.target
-systemd:
-  units:
-    # install tools
-    - name: install-tools.service
-      enabled: true
-      contents: |
-        [Unit]
-        Description=Install tools
-        Wants=network-online.target
-        After=network-online.target
-        # We run before `zincati.service` to avoid conflicting rpm-ostree
-        # transactions.
-        Before=zincati.service
-        ConditionPathExists=!/var/lib/%N.stamp
-
-        [Service]
-        Type=oneshot
-        RemainAfterExit=yes
-        # `--allow-inactive` ensures that rpm-ostree does not return an error
-        # if the package is already installed. This is useful if the package is
-        # added to the root image in a future Fedora CoreOS release as it will
-        # prevent the service from failing.
-        ExecStart=/usr/bin/rpm-ostree install -y --allow-inactive cockpit-system cockpit-ostree cockpit-podman
-        ExecStart=/bin/touch /var/lib/%N.stamp
-        ExecStart=/bin/systemctl --no-block reboot
-
-        [Install]
-        WantedBy=multi-user.target
+    # sms live tracker environment
+    - path: /etc/sms-live-tracker.env
+      contents:
+        local: coreos/env
+    #- path: /var/lib/containers/storage/volumes/smstracker/_data/positions.json
+    #  contents:
+    #    local: data/positions.json
+    #  overwrite: true
+    #- path: /var/lib/containers/storage/volumes/smstracker/_data/routes.json
+    #  contents:
+    #    local: data/routes.json
+    #  overwrite: true
