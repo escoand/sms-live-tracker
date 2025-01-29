@@ -235,8 +235,10 @@ const updatePositions = (map) => {
           .length
           ? "orangered"
           : "";
-        document.getElementById(prefix + "-battery").innerHTML =
-          pos.properties.battery;
+        document.getElementById(prefix + "-battery").innerHTML = pos.properties
+          .battery
+          ? pos.properties.battery
+          : "";
         document.getElementById(prefix + "-requested").innerHTML = requested
           ? Math.round((now - requested) / 1000 / 60) + "min"
           : "";
