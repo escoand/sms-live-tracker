@@ -1,6 +1,7 @@
 /coreos/config.ign
 /data/
 /env
+/node_modules/
 /run.sh
 /wifi.conf
 /www/

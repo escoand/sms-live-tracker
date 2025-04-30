@@ -7,12 +7,8 @@
       name="viewport"
       content="initial-scale=1,maximum-scale=1,user-scalable=no"
     />
-    <script src="https://cdn.maptiler.com/maptiler-sdk-js/v2.3.0/maptiler-sdk.umd.js"></script>
-    <link
-      href="https://cdn.maptiler.com/maptiler-sdk-js/v2.3.0/maptiler-sdk.css"
-      rel="stylesheet"
-    />
-    <script src="/functions.js"></script>
+    <script src="/index.js"></script>
+    <link href="/index.css" rel="stylesheet" />
     <title>Tracker live map</title>
   </head>
   <body>
@@ -20,5 +16,8 @@
       id="map"
       style="height: 100%; left: 0; position: fixed; top: 0; width: 100%"
     ></div>
+    <script>
+      new LiveTrackerMap("map", "WhAMg18w38LHuVYEtZE9");
+    </script>
   </body>
 </html>
