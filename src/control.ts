@@ -1,5 +1,7 @@
 import { GeoJSONSource, IControl, Map } from "maplibre-gl";
-import { iconColor, iconViewBox } from "./const";
+import { iconColor, iconTransform, iconViewBox } from "./const";
+
+const svgNamespace = "http://www.w3.org/2000/svg";
 
 export abstract class SvgIconControl implements IControl {
   protected _source: GeoJSONSource;
@@ -12,25 +14,28 @@ export abstract class SvgIconControl implements IControl {
     this._button = this._container.appendChild(
       document.createElement("button")
     );
-    const icon = this._button.appendChild(document.createElement("span"));
-
     this._container.className = "maplibregl-ctrl maplibregl-ctrl-group";
     this._button.type = "button";
+
+    const svg = document.createElementNS(svgNamespace, "svg");
+    svg.setAttribute("xmlns", svgNamespace);
+    svg.setAttribute("fill", iconColor);
+    svg.setAttribute("viewBox", iconViewBox);
+    svg
+      .appendChild(document.createElementNS(svgNamespace, "path"))
+      .setAttribute("d", svgIconPath);
+
+    const icon = this._button.appendChild(document.createElement("span"));
     icon.className = "maplibregl-ctrl-icon";
+    icon.style.transform = iconTransform;
     icon.style.backgroundImage =
-      "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='" +
-      encodeURIComponent(iconColor) +
-      "' viewBox='" +
-      encodeURIComponent(iconViewBox) +
-      "'%3E%3Cpath d='" +
-      svgIconPath +
-      "'%3E%3C/path%3E%3C/svg%3E\")";
-    icon.style.transform = "scale(0.6)";
+      'url("data:image/svg+xml,' + encodeURIComponent(svg.outerHTML) + '")';
   }
 
   abstract onAdd(map: Map);
 
   onRemove() {
+    this._source = undefined;
     this._container.parentNode.removeChild(this._container);
   }
 }

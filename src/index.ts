@@ -1,34 +1,37 @@
-import { config, Map, MapLibreEvent, MapStyle } from "@maptiler/sdk";
 import {
+  ErrorEvent,
   FullscreenControl,
   GeoJSONSource,
   GeolocateControl,
+  Map,
+  MapLibreEvent,
   NavigationControl,
+  ScaleControl,
 } from "maplibre-gl";
-import "../node_modules/@maptiler/sdk/dist/maptiler-sdk.css";
 import { layers, positionsSource, routesSource } from "./const";
+import { ErrorControl } from "./control.error";
 import { RoutesControl } from "./control.routes";
 import { TrackersControl } from "./control.trackers";
 import { ZoomToFitControl } from "./control.zoomtofit";
 
-class LiveTrackerMap {
-  constructor(container: string, apiKey: string) {
-    config.apiKey = apiKey;
+import "../node_modules/@maptiler/sdk/dist/maptiler-sdk.css";
 
-    const map = new Map({
-      container,
-      style: MapStyle.TOPO,
+class LiveTrackerMap {
+  private _map: Map;
+
+  constructor(container: string, apiKey: string) {
+    this._map = new Map({
+      attributionControl: false,
       center: [0, 0],
-      geolocateControl: false,
-      scaleControl: "bottom-left",
-      navigationControl: false,
+      container,
+      style: `https://api.maptiler.com/maps/topo/style.json?key=${apiKey}`,
     });
 
-    map.on("load", this._init);
-    map.on("render", this._removeControls);
+    this._map.on("error", this._onError.bind(this));
+    this._map.once("load", this._onLoad.bind(this));
   }
 
-  private _init(evt: MapLibreEvent) {
+  private _onLoad(evt: MapLibreEvent) {
     const map = evt.target;
 
     // add sources
@@ -44,11 +47,12 @@ class LiveTrackerMap {
 
     // add controls
     const zoomControl = new ZoomToFitControl(routes);
+    map.addControl(new ScaleControl());
     map.addControl(new FullscreenControl());
     map.addControl(new GeolocateControl({}));
     map.addControl(new NavigationControl(), "bottom-right");
     map.addControl(zoomControl, "bottom-right");
-    map.addControl(new RoutesControl(routes));
+    map.addControl(new RoutesControl(routes), "top-right");
     map.addControl(new TrackersControl(positions), "top-left");
 
     // add events
@@ -56,12 +60,8 @@ class LiveTrackerMap {
     setInterval(() => positions.setData(positions._options.data), 10 * 1000);
   }
 
-  private _removeControls(evt: MapLibreEvent) {
-    const map = evt.target;
-
-    map._controls
-      .filter((c) => "logoURL" in c || "_attribHTML" in c)
-      .forEach(map.removeControl.bind(map));
+  private _onError(evt: ErrorEvent) {
+    this._map.addControl(new ErrorControl(evt), "bottom-left");
   }
 }
 

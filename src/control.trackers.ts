@@ -1,6 +1,7 @@
 import { mdiAccountGroup } from "@mdi/js";
-import { FeatureCollection, Point } from "geojson";
+import { Feature, FeatureCollection, Point } from "geojson";
 import { GeoJSONSource, Map, MapSourceDataEvent } from "maplibre-gl";
+import { createError } from "./common";
 import { iconColor } from "./const";
 import { SvgIconControl } from "./control";
 
@@ -8,10 +9,6 @@ const texts = {
   confirm: {
     de: "Dadurch wird eine SMS an den Tracker und eine SMS zurück gesendet. Bist du sicher?",
     _: "This will send a SMS to the tracker and a SMS back. Are you sure?",
-  },
-  error: {
-    de: "Server hat mit Fehler geantwortet",
-    _: "Server responded with error",
   },
 };
 
@@ -38,15 +35,17 @@ export class TrackersControl extends SvgIconControl {
 
   constructor(source: GeoJSONSource) {
     super(mdiAccountGroup, source);
+
+    this._table = this._container.appendChild(document.createElement("table"));
+    this._trackers = this._table.appendChild(document.createElement("tbody"));
+
     this._source.on("data", this._onSourceUpdated.bind(this));
   }
 
   onAdd(map: Map) {
-    this._table = this._container.appendChild(document.createElement("table"));
     const head = this._table
-      .appendChild(document.createElement("thead"))
+      .insertBefore(document.createElement("thead"), this._trackers)
       .appendChild(document.createElement("tr"));
-    this._trackers = this._table.appendChild(document.createElement("tbody"));
 
     this._table.style.display = "none";
     this._trackers.style.textAlign = "right";
@@ -65,6 +64,11 @@ export class TrackersControl extends SvgIconControl {
     return this._container;
   }
 
+  onRemove() {
+    this._source.off("data", this._onSourceUpdated.bind(this));
+    super.onRemove();
+  }
+
   toggle(forceClose = false) {
     if (this._button.style.display != "none" || forceClose) {
       this._button.style.display = "none";
@@ -72,63 +76,8 @@ export class TrackersControl extends SvgIconControl {
     } else {
       this._button.style.display = "";
       this._table.style.display = "none";
+      if (this._trackers.childNodes.length == 0) this._updateTrackers();
     }
-  }
-
-  private _onSourceUpdated(evt: MapSourceDataEvent) {
-    if (evt.sourceDataType != "content") return;
-    const now = Date.now();
-
-    // update data table
-    this._source.getData().then((positions: FeatureCollection<Point>) => {
-      positions.features.forEach((pos) => {
-        const prefix = "data-" + pos.properties?.name;
-
-        // create tracker entry
-        if (!document.getElementById(prefix)) {
-          const row = document.createElement("tr");
-          row.setAttribute("id", prefix);
-          row
-            .appendChild(document.createElement("td"))
-            .append(pos.properties?.name);
-          row
-            .appendChild(document.createElement("td"))
-            .setAttribute("id", prefix + "-battery");
-          row
-            .appendChild(document.createElement("td"))
-            .setAttribute("id", prefix + "-requested");
-          row
-            .appendChild(document.createElement("td"))
-            .setAttribute("id", prefix + "-received");
-          const btn = row
-            .appendChild(document.createElement("td"))
-            .appendChild(document.createElement("button"));
-          btn.innerHTML = "&#128260;";
-          btn.addEventListener("click", () =>
-            this.requestPosition(pos.properties?.number)
-          );
-          this._trackers.appendChild(row);
-        }
-
-        // update tracker entry
-        const requested = new Date(pos.properties?.requested).getTime();
-        const received = new Date(pos.properties?.received).getTime();
-        document.getElementById(prefix).style.color = !pos.geometry.coordinates
-          .length
-          ? "orangered"
-          : "";
-        document.getElementById(prefix + "-battery").innerHTML = pos.properties
-          ?.battery
-          ? pos.properties?.battery
-          : "";
-        document.getElementById(prefix + "-requested").innerHTML = requested
-          ? timeDiff(now, requested)
-          : "";
-        document.getElementById(prefix + "-received").innerHTML = received
-          ? timeDiff(now, received)
-          : "";
-      });
-    });
   }
 
   requestPosition(number: string) {
@@ -136,13 +85,71 @@ export class TrackersControl extends SvgIconControl {
       fetch("/request", { body: number, method: "POST" }).then(
         (response) =>
           !response.ok &&
-          alert(
-            getText("error") +
-              ": " +
-              response.status +
-              " " +
-              response.statusText
+          this._source.map.fire(
+            createError(
+              `${response.statusText} (${response.status}): ${response.url}`
+            )
           )
       );
+  }
+
+  private _onSourceUpdated(evt: MapSourceDataEvent) {
+    if (evt.sourceDataType != "content") return;
+    this._updateTrackers();
+  }
+
+  private _updateTrackers() {
+    const now = Date.now();
+    this._source.getData().then((positions: FeatureCollection) => {
+      positions.features
+        .filter((feature) => feature.geometry.type == "Point")
+        .forEach((pos: Feature<Point>) => {
+          const prefix = "data-" + pos.properties?.name;
+
+          // create tracker entry
+          if (!document.getElementById(prefix)) {
+            const row = document.createElement("tr");
+            row.setAttribute("id", prefix);
+            row
+              .appendChild(document.createElement("td"))
+              .append(pos.properties?.name);
+            row
+              .appendChild(document.createElement("td"))
+              .setAttribute("id", prefix + "-battery");
+            row
+              .appendChild(document.createElement("td"))
+              .setAttribute("id", prefix + "-requested");
+            row
+              .appendChild(document.createElement("td"))
+              .setAttribute("id", prefix + "-received");
+            const btn = row
+              .appendChild(document.createElement("td"))
+              .appendChild(document.createElement("button"));
+            btn.innerHTML = "&#128260;";
+            btn.addEventListener("click", () =>
+              this.requestPosition(pos.properties?.number)
+            );
+            this._trackers.appendChild(row);
+          }
+
+          // update tracker entry
+          const requested = new Date(pos.properties?.requested).getTime();
+          const received = new Date(pos.properties?.received).getTime();
+          document.getElementById(prefix).style.color = !pos.geometry
+            .coordinates.length
+            ? "orangered"
+            : "";
+          document.getElementById(prefix + "-battery").innerHTML = pos
+            .properties?.battery
+            ? pos.properties?.battery
+            : "";
+          document.getElementById(prefix + "-requested").innerHTML = requested
+            ? timeDiff(now, requested)
+            : "";
+          document.getElementById(prefix + "-received").innerHTML = received
+            ? timeDiff(now, received)
+            : "";
+        });
+    });
   }
 }

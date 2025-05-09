@@ -91,4 +91,5 @@ export const layers: AddLayerObject[] = [
 ];
 
 export const iconColor = "#333";
+export const iconTransform = "scale(0.6)";
 export const iconViewBox = "0 0 24 24";
