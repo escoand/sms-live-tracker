@@ -11,13 +11,11 @@ RUN apk --no-cache add \
         usb-modeswitch=2.6.1-r4 && \
     addgroup smsd audio
 
-COPY scripts/   /usr/local/bin/
-COPY www/       /var/www/html/
-COPY nginx.conf /etc/nginx/http.d/default.conf
-COPY smsd.conf  /etc/smsd.conf
+COPY scripts/           /usr/local/bin/
+COPY nginx.backend.conf /etc/nginx/http.d/default.conf
+COPY smsd.conf          /etc/smsd.conf
 
 VOLUME /data
 ENV DEVICE         /dev/ttyUSB1
-ENV POSITIONS      /data/positions.json
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

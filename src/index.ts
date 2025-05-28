@@ -47,18 +47,19 @@ class LiveTrackerMap {
 
   private _onLoad(evt: MapLibreEvent) {
     const map = evt.target;
+    const backendUrl = this._config.backend || "";
 
     // add sources
     const routes: GeoJSONSource = map
       .addSource(routesSource, {
         type: "geojson",
-        data: this._config.routesUrl || "/routes.json",
+        data: backendUrl + "/routes.json",
       })
       .getSource(routesSource);
     const positions: GeoJSONSource = map
       .addSource(positionsSource, {
         type: "geojson",
-        data: this._config.trackersUrl || "/trackers.json",
+        data: backendUrl + "/trackers.json",
       })
       .getSource(positionsSource);
 
@@ -73,7 +74,7 @@ class LiveTrackerMap {
     map.addControl(new NavigationControl(), "bottom-right");
     map.addControl(zoomControl, "bottom-right");
     map.addControl(new RoutesControl(routes), "top-right");
-    map.addControl(new TrackersControl(positions), "top-left");
+    map.addControl(new TrackersControl(positions, backendUrl), "top-left");
 
     // add events
     routes.once("data", () => zoomControl.zoomToFit());
