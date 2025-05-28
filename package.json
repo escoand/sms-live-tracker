@@ -1,0 +1,22 @@
+{
+  "name": "sms-live-tracker",
+  "version": "1.0.0",
+  "author": "escoand",
+  "license": "MIT",
+  "type": "module",
+  "devDependencies": {
+    "@maptiler/sdk": "^3.2.0",
+    "@mdi/js": "^7.4.47",
+    "@types/node": "^22.15.3",
+    "browserslist-to-esbuild": "^2.1.1",
+    "esbuild": "0.25.3",
+    "typescript": "^5.8.3"
+  },
+  "scripts": {
+    "build": "node build.js",
+    "start": "npx esbuild src/index.ts --outdir=www --bundle --format=iife --servedir=www --watch"
+  },
+  "dependencies": {
+    "modem": "^1.0.3"
+  }
+}
