@@ -10,7 +10,8 @@ if (process.argv.length > 2 && !existsSync(configFile)) {
     configFile,
     JSON.stringify({
       apiKey: process.argv[2],
-      dataUrlPrefix: process.argv[3],
+      routesUrl: process.argv[3],
+      trackersUrl: process.argv[4],
     }),
     () => {}
   );

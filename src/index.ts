@@ -47,19 +47,18 @@ class LiveTrackerMap {
 
   private _onLoad(evt: MapLibreEvent) {
     const map = evt.target;
-    const dataUrlPrefix = this._config.dataUrlPrefix || "";
 
     // add sources
     const routes: GeoJSONSource = map
       .addSource(routesSource, {
         type: "geojson",
-        data: dataUrlPrefix + "/routes.json",
+        data: this._config.routesUrl || "/routes.json",
       })
       .getSource(routesSource);
     const positions: GeoJSONSource = map
       .addSource(positionsSource, {
         type: "geojson",
-        data: dataUrlPrefix + "/positions",
+        data: this._config.trackersUrl || "/trackers.json",
       })
       .getSource(positionsSource);
 
