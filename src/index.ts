@@ -13,6 +13,7 @@ import { ErrorControl } from "./control.error";
 import { RoutesControl } from "./control.routes";
 import { TrackersControl } from "./control.trackers";
 import { ZoomToFitControl } from "./control.zoomtofit";
+import { LiveTrackerConfig } from "./types";
 
 import "../node_modules/@maptiler/sdk/dist/maptiler-sdk.css";
 
@@ -47,19 +48,18 @@ class LiveTrackerMap {
 
   private _onLoad(evt: MapLibreEvent) {
     const map = evt.target;
-    const backendUrl = this._config.backend || "";
 
     // add sources
     const routes: GeoJSONSource = map
       .addSource(routesSource, {
         type: "geojson",
-        data: backendUrl + "/routes.json",
+        data: "/routes.json",
       })
       .getSource(routesSource);
     const positions: GeoJSONSource = map
       .addSource(positionsSource, {
         type: "geojson",
-        data: backendUrl + "/trackers.json",
+        data: "/trackers.json",
       })
       .getSource(positionsSource);
 
@@ -74,7 +74,7 @@ class LiveTrackerMap {
     map.addControl(new NavigationControl(), "bottom-right");
     map.addControl(zoomControl, "bottom-right");
     map.addControl(new RoutesControl(routes), "top-right");
-    map.addControl(new TrackersControl(positions, backendUrl), "top-left");
+    map.addControl(new TrackersControl(positions), "top-left");
 
     // add events
     routes.once("data", () => zoomControl.zoomToFit());

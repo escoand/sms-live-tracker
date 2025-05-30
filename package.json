@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "author": "escoand",
   "license": "MIT",
-  "type": "module",
   "devDependencies": {
     "@maptiler/sdk": "^3.2.0",
     "@mdi/js": "^7.4.47",
@@ -14,9 +13,10 @@
   },
   "scripts": {
     "build": "node build.js",
-    "start": "npx esbuild src/index.ts --outdir=www --bundle --format=iife --servedir=www --watch"
+    "start": "npx ts-node src/app.ts"
   },
   "dependencies": {
-    "modem": "^1.0.3"
+    "dotenv": "^16.5.0",
+    "ts-node": "^10.9.2"
   }
 }

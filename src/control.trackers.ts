@@ -30,14 +30,12 @@ function timeDiff(now: number, then: number): string {
 }
 
 export class TrackersControl extends SvgIconControl {
-  private _backendUrl: string;
   private _table: HTMLTableElement;
   private _trackers: HTMLTableSectionElement;
 
-  constructor(source: GeoJSONSource, backendUrl?: string) {
+  constructor(source: GeoJSONSource) {
     super(mdiAccountGroup, source);
 
-    this._backendUrl = backendUrl || "";
     this._table = this._container.appendChild(document.createElement("table"));
     this._trackers = this._table.appendChild(document.createElement("tbody"));
 
@@ -82,10 +80,10 @@ export class TrackersControl extends SvgIconControl {
     }
   }
 
-  requestPosition(number: string) {
-    if (confirm(getText("confirm")))
-      fetch(this._backendUrl + "/request", {
-        body: number,
+  requestPosition(tracker: string) {
+    if (confirm(getText("confirm"))) {
+      fetch("/api/request", {
+        body: tracker,
         method: "POST",
       }).then(
         (response) =>
@@ -96,6 +94,7 @@ export class TrackersControl extends SvgIconControl {
             )
           )
       );
+    }
   }
 
   private _onSourceUpdated(evt: MapSourceDataEvent) {
@@ -132,7 +131,7 @@ export class TrackersControl extends SvgIconControl {
               .appendChild(document.createElement("button"));
             btn.innerHTML = "&#128260;";
             btn.addEventListener("click", () =>
-              this.requestPosition(pos.properties?.number)
+              this.requestPosition(pos.properties?.name)
             );
             this._trackers.appendChild(row);
           }
