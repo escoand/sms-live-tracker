@@ -28,7 +28,7 @@ const server = http.createServer((req, res) => {
             .catch((err) => {
               const msg = err.cause?.message || err.message;
               console.log(msg);
-              res.writeHead(400, msg).end();
+              res.writeHead(500, msg).end();
             });
         });
     }
@@ -39,8 +39,14 @@ const server = http.createServer((req, res) => {
       req
         .on("data", (chunk) => body.push(chunk))
         .on("end", () => {
-          console.log(body.toString());
-          res.writeHead(200, "OK").end();
+          api
+            .receive(body.toString())
+            .then(() => res.writeHead(200, "OK").end())
+            .catch((err) => {
+              const msg = err.cause?.message || err.message;
+              console.log(msg);
+              res.writeHead(500, msg).end();
+            });
         });
     }
 

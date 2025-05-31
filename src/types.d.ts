@@ -4,5 +4,5 @@ export type LiveTrackerConfig = {
 
 export interface TrackersApi {
   request: (trackerName: string) => Promise;
-  receive: (payload: string) => void;
+  receive: (payload: string) => Promise;
 }
