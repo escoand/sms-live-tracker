@@ -3,6 +3,8 @@ import { AddLayerObject, ExpressionSpecification } from "maplibre-gl";
 export const positionsSource = "positions";
 export const routesSource = "routes";
 
+// see https://maplibre.org/maplibre-style-spec/
+
 const colors: ExpressionSpecification = [
   "interpolate",
   ["linear"],
