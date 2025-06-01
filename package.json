@@ -13,10 +13,10 @@
   },
   "scripts": {
     "build": "node build.js",
-    "start": "npx ts-node src/app.ts"
+    "start": "node app.js"
   },
   "dependencies": {
     "dotenv": "^16.5.0",
-    "ts-node": "^10.9.2"
+    "serve-handler": "^6.1.6"
   }
 }

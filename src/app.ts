@@ -1,15 +1,16 @@
 import { config } from "dotenv";
-import { readFile } from "fs";
-import * as http from "http";
+import http from "http";
 import { AddressInfo } from "net";
+import handler from "serve-handler";
 import { SmsGateway } from "./api.smsgateapp";
 import { TrackersApi } from "./types";
 
 const dataDir = "data";
 const staticDir = "www";
-const api: TrackersApi = new SmsGateway();
 
 config();
+
+const api: TrackersApi = new SmsGateway();
 
 const server = http.createServer((req, res) => {
   res.on("finish", () => console.info(res.statusCode, req.method, req.url));
@@ -21,16 +22,16 @@ const server = http.createServer((req, res) => {
       const body: any[] = [];
       req
         .on("data", (chunk) => body.push(chunk))
-        .on("end", () => {
+        .on("end", () =>
           api
             .request(body.toString())
             .then(() => res.writeHead(200).end())
             .catch((err) => {
-              const msg = err.cause?.message || err.message;
-              console.log(msg);
-              res.writeHead(500, msg).end();
-            });
-        });
+              const realErr = err.cause || err;
+              console.log(realErr);
+              res.writeHead(500, realErr.message).end();
+            })
+        );
     }
 
     // receive position
@@ -38,50 +39,35 @@ const server = http.createServer((req, res) => {
       const body: any[] = [];
       req
         .on("data", (chunk) => body.push(chunk))
-        .on("end", () => {
+        .on("end", () =>
           api
             .receive(body.toString())
             .then(() => res.writeHead(200, "OK").end())
             .catch((err) => {
-              const msg = err.cause?.message || err.message;
-              console.log(msg);
-              res.writeHead(500, msg).end();
-            });
-        });
+              const realErr = err.cause || err;
+              console.log(realErr);
+              res.writeHead(500, realErr.message).end();
+            })
+        );
     }
 
     // else
     else {
       res.writeHead(400, "Bad Request").end();
     }
+
+    return;
   }
 
-  // static and data
-  else if (req.method == "GET") {
-    let localFile;
-
-    if (req.url == "/") {
-      localFile = staticDir + "/index.html";
-    } else if (req.url.endsWith(".json")) {
-      localFile = dataDir + req.url;
-    } else {
-      localFile = staticDir + req.url;
-    }
-
-    readFile(localFile, (err, data) => {
-      if (!err && data) {
-        res.write(data.toString());
-        res.end();
-      } else {
-        res.writeHead(404, "Not found").end();
-      }
-    });
-  }
-
-  // else
-  else {
-    res.writeHead(400, "Bad Request").end();
-  }
+  handler(req, res, {
+    directoryListing: false,
+    etag: true,
+    rewrites: [
+      { source: "/:name.json", destination: dataDir + "/:name.json" },
+      { source: "/", destination: staticDir + "/index.html" },
+      { source: "/:url", destination: staticDir + "/:url" },
+    ],
+  });
 });
 
 server.listen(3000, () => {

@@ -17,6 +17,7 @@ if (process.argv.length > 2 && !existsSync(configFile)) {
   );
 }
 
+// frontend
 await build({
   bundle: true,
   entryPoints: ["src/index.ts"],
@@ -24,4 +25,13 @@ await build({
   minify: true,
   outdir: "www",
   target: browserslistToEsbuild(),
+});
+
+// app
+await build({
+  bundle: true,
+  entryPoints: ["src/app.ts"],
+  minify: true,
+  platform: "node",
+  outdir: ".",
 });

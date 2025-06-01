@@ -4,6 +4,7 @@
 /www/
 
 /.env
+/app.js
 
 *.bin
 *.dtb

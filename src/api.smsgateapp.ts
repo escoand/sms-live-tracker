@@ -1,8 +1,8 @@
 import { readFile, writeFile } from "fs/promises";
 import { FeatureCollection } from "geojson";
+import { Encryptor } from "./crypt";
 import { TrackersApi } from "./types";
 
-const auth = btoa(process.env.API_AUTHENTICATION);
 const trackersFile = "data/trackers.json";
 
 type SmsMessage = {
@@ -103,6 +103,14 @@ type SystemPingEvent = WebHookEvent & {
 };
 
 export class SmsGateway implements TrackersApi {
+  private _auth: string;
+  private _crypt: Encryptor;
+
+  constructor() {
+    this._auth = btoa(process.env.API_AUTHENTICATION);
+    this._crypt = new Encryptor(process.env.API_ENCRYPTION);
+  }
+
   request(trackerName: string): Promise<any> {
     return readFile(trackersFile).then((buf) => {
       const positions: FeatureCollection = JSON.parse(buf.toString());
@@ -120,15 +128,16 @@ export class SmsGateway implements TrackersApi {
 
       const body: SmsMessage = {
         id: null,
-        message: process.env.API_MESSAGE,
-        phoneNumbers: [tracker.properties.number],
+        message: this._crypt.Encrypt(process.env.API_MESSAGE),
+        phoneNumbers: [this._crypt.Encrypt(tracker.properties.number)],
+        isEncrypted: true,
       };
 
       return fetch("https://api.sms-gate.app/3rdparty/v1/messages", {
         body: JSON.stringify(body),
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Basic ${auth}`,
+          Authorization: `Basic ${this._auth}`,
         },
         method: "POST",
       }).then((response) => {
@@ -147,6 +156,7 @@ export class SmsGateway implements TrackersApi {
 
   receive(payload: string): Promise<any> {
     const data: WebHookEvent = JSON.parse(payload);
+    console.log(`event received:`, JSON.stringify(data));
     switch (data.event) {
       // sms delivered
       case "sms:delivered":
