@@ -1,7 +1,7 @@
 import { mdiFitToPageOutline } from "@mdi/js";
 import { FeatureCollection } from "geojson";
 import { GeoJSONSource, LngLatBoundsLike, Map } from "maplibre-gl";
-import { SvgIconControl } from "./control";
+import { SvgIconControl } from "./base";
 
 export class ZoomToFitControl extends SvgIconControl {
   constructor(source: GeoJSONSource) {

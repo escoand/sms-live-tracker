@@ -1,5 +1,5 @@
 import { Feature, Point } from "geojson";
-import test, { suite } from "node:test";
+import { suite, test } from "node:test";
 import { SmsGateApp } from "../src/api/smsgateapp";
 import { TrackersApp } from "../src/types";
 

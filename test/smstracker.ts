@@ -1,5 +1,5 @@
 import { Feature, Point } from "geojson";
-import test, { suite } from "node:test";
+import { suite, test } from "node:test";
 import { SmsTrackerParser } from "../src/parser/smstracker";
 
 suite("sms tracker parser", () => {

@@ -1,9 +1,9 @@
 import { mdiAccountGroup } from "@mdi/js";
 import { Feature, FeatureCollection, Point } from "geojson";
 import { GeoJSONSource, Map, MapSourceDataEvent } from "maplibre-gl";
-import { createError } from "./common";
-import { iconColor } from "./const";
-import { SvgIconControl } from "./control";
+import { createError } from "../common";
+import { iconColor } from "../const";
+import { SvgIconControl } from "./base";
 
 const texts = {
   confirm: {
@@ -58,7 +58,7 @@ export class TrackersControl extends SvgIconControl {
     head.appendChild(document.createElement("th")).append("📌");
     head.appendChild(document.createElement("th"));
     const close = head.appendChild(document.createElement("th"));
-    close.append("❌&#xFE0E;");
+    close.innerHTML = "❌&#xFE0E;";
     close.style.color = iconColor;
 
     this._button.addEventListener("click", () => this.toggle());

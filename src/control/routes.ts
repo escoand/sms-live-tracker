@@ -1,7 +1,7 @@
 import { mdiGoKartTrack } from "@mdi/js";
 import { FeatureCollection } from "geojson";
 import { GeoJSONSource, Map, MapSourceDataEvent } from "maplibre-gl";
-import { SvgIconControl } from "./control";
+import { SvgIconControl } from "./base";
 
 export class RoutesControl extends SvgIconControl {
   private _routes: HTMLUListElement;

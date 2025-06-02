@@ -9,10 +9,10 @@ import {
   ScaleControl,
 } from "maplibre-gl";
 import { layers, positionsSource, routesSource } from "./const";
-import { ErrorControl } from "./control.error";
-import { RoutesControl } from "./control.routes";
-import { TrackersControl } from "./control.trackers";
-import { ZoomToFitControl } from "./control.zoomtofit";
+import { ErrorControl } from "./control/error";
+import { RoutesControl } from "./control/routes";
+import { TrackersControl } from "./control/trackers";
+import { ZoomToFitControl } from "./control/zoomtofit";
 import { LiveTrackerConfig } from "./types";
 
 import "../node_modules/@maptiler/sdk/dist/maptiler-sdk.css";

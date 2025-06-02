@@ -1,8 +1,8 @@
 import { config } from "dotenv";
 import { readFile, writeFile } from "fs/promises";
 import { Feature, FeatureCollection, Point } from "geojson";
-import http, { IncomingMessage, ServerResponse } from "http";
-import handler from "serve-handler";
+import * as http from "http";
+import * as handler from "serve-handler";
 import { SmsGateApp } from "./api/smsgateapp";
 import { SmsTrackerParser } from "./parser/smstracker";
 import { TrackersApp, TrackersBackend, TrackersParser } from "./types";
@@ -53,7 +53,7 @@ class TrackerApp implements TrackersApp {
 
   private _startServer() {
     http
-      .createServer((req: IncomingMessage, res: ServerResponse) => {
+      .createServer((req: http.IncomingMessage, res: http.ServerResponse) => {
         res.on("finish", () => this._accessLog(req, res));
 
         // api middleware
@@ -113,7 +113,7 @@ class TrackerApp implements TrackersApp {
       .listen(port);
   }
 
-  private _accessLog(req: IncomingMessage, res: ServerResponse) {
+  private _accessLog(req: http.IncomingMessage, res: http.ServerResponse) {
     console.info(
       req.socket.remoteAddress,
       "-",

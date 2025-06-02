@@ -13,10 +13,12 @@
   },
   "scripts": {
     "build": "node build.js",
-    "start": "node app.js"
+    "start": "node --require ts-node/register src/app.ts",
+    "test": "node --require ts-node/register --test test/*.ts"
   },
   "dependencies": {
     "dotenv": "^16.5.0",
-    "serve-handler": "^6.1.6"
+    "serve-handler": "^6.1.6",
+    "ts-node": "^10.9.2"
   }
 }

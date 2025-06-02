@@ -1,5 +1,5 @@
 import { GeoJSONSource, IControl, Map } from "maplibre-gl";
-import { iconColor, iconTransform, iconViewBox } from "./const";
+import { iconColor, iconTransform, iconViewBox } from "../const";
 
 const svgNamespace = "http://www.w3.org/2000/svg";
 

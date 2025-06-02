@@ -17,21 +17,12 @@ if (process.argv.length > 2 && !existsSync(configFile)) {
   );
 }
 
-// frontend
 await build({
   bundle: true,
   entryPoints: ["src/index.ts"],
   format: "iife",
   minify: true,
   outdir: "www",
+  sourcemap: true,
   target: browserslistToEsbuild(),
-});
-
-// app
-await build({
-  bundle: true,
-  entryPoints: ["src/app.ts"],
-  minify: true,
-  platform: "node",
-  outdir: ".",
 });
