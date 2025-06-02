@@ -18,7 +18,7 @@ function getText(id: string): string {
   return texts[id][lang] || id;
 }
 
-function timeDiff(now: number, then: number): string {
+function timeDiff(then: number, now: number = Date.now()): string {
   const diff = now - then;
   const days = Math.floor(diff / 1000 / 24 / 60 / 60);
   const hours = Math.floor((diff / 1000 / 60 / 60) % 24);
@@ -36,8 +36,12 @@ export class TrackersControl extends SvgIconControl {
   constructor(source: GeoJSONSource) {
     super(mdiAccountGroup, source);
 
+    this._container
+      .appendChild(document.createElement("style"))
+      .append(".trackers td { text-align: right; }");
     this._table = this._container.appendChild(document.createElement("table"));
     this._trackers = this._table.appendChild(document.createElement("tbody"));
+    this._table.classList.add("trackers");
 
     this._source.on("data", this._onSourceUpdated.bind(this));
   }
@@ -48,14 +52,13 @@ export class TrackersControl extends SvgIconControl {
       .appendChild(document.createElement("tr"));
 
     this._table.style.display = "none";
-    this._trackers.style.textAlign = "right";
 
     head.appendChild(document.createElement("th"));
-    head.appendChild(document.createElement("th")).innerHTML = "&#128267;";
-    head.appendChild(document.createElement("th")).innerHTML = "&#128228;";
-    head.appendChild(document.createElement("th")).innerHTML = "&#128229;";
+    head.appendChild(document.createElement("th")).append("🔋");
+    head.appendChild(document.createElement("th")).append("📌");
+    head.appendChild(document.createElement("th"));
     const close = head.appendChild(document.createElement("th"));
-    close.innerHTML = "&#x274C;&#xFE0E;";
+    close.append("❌&#xFE0E;");
     close.style.color = iconColor;
 
     this._button.addEventListener("click", () => this.toggle());
@@ -122,14 +125,14 @@ export class TrackersControl extends SvgIconControl {
               .setAttribute("id", prefix + "-battery");
             row
               .appendChild(document.createElement("td"))
-              .setAttribute("id", prefix + "-requested");
+              .setAttribute("id", prefix + "-received");
             row
               .appendChild(document.createElement("td"))
-              .setAttribute("id", prefix + "-received");
+              .setAttribute("id", prefix + "-requested");
             const btn = row
               .appendChild(document.createElement("td"))
               .appendChild(document.createElement("button"));
-            btn.innerHTML = "&#128260;";
+            btn.append("🔃");
             btn.addEventListener("click", () =>
               this.requestPosition(pos.properties?.name)
             );
@@ -137,22 +140,39 @@ export class TrackersControl extends SvgIconControl {
           }
 
           // update tracker entry
-          const requested = new Date(pos.properties?.requested).getTime();
-          const received = new Date(pos.properties?.received).getTime();
           document.getElementById(prefix).style.color = !pos.geometry
             .coordinates.length
             ? "orangered"
             : "";
-          document.getElementById(prefix + "-battery").innerHTML = pos
-            .properties?.battery
-            ? pos.properties?.battery
-            : "";
-          document.getElementById(prefix + "-requested").innerHTML = requested
-            ? timeDiff(now, requested)
-            : "";
-          document.getElementById(prefix + "-received").innerHTML = received
-            ? timeDiff(now, received)
-            : "";
+          document.getElementById(prefix + "-battery").innerHTML =
+            pos.properties?.battery || "";
+
+          const received = document.getElementById(prefix + "-received");
+          received.innerHTML = "";
+          if (pos.properties?.received) {
+            const date = new Date(pos.properties.received).getTime();
+            received.appendChild(document.createTextNode(timeDiff(date)));
+          }
+
+          const requested = document.getElementById(prefix + "-requested");
+          requested.innerHTML = "";
+          if (pos.properties?.failed) {
+            const date = new Date(pos.properties.failed).getTime();
+            requested.append("❌");
+            requested.setAttribute("title", timeDiff(date));
+          } else if (pos.properties?.delivered) {
+            const date = new Date(pos.properties.delivered).getTime();
+            requested.append("✅");
+            requested.setAttribute("title", timeDiff(date));
+          } else if (pos.properties?.sent) {
+            const date = new Date(pos.properties.sent).getTime();
+            requested.append("🟩");
+            requested.setAttribute("title", timeDiff(date));
+          } else if (pos.properties?.requested) {
+            const date = new Date(pos.properties.requested).getTime();
+            requested.append("🟨");
+            requested.setAttribute("title", timeDiff(date));
+          }
         });
     });
   }

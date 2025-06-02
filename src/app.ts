@@ -3,8 +3,9 @@ import { readFile, writeFile } from "fs/promises";
 import { Feature, FeatureCollection, Point } from "geojson";
 import http, { IncomingMessage, ServerResponse } from "http";
 import handler from "serve-handler";
-import { SmsGateApp } from "./api.smsgateapp";
-import { TrackersApi, TrackersApp } from "./types";
+import { SmsGateApp } from "./api/smsgateapp";
+import { SmsTrackerParser } from "./parser/smstracker";
+import { TrackersApp, TrackersBackend, TrackersParser } from "./types";
 
 const port = 3000;
 const dataDir = "data";
@@ -13,10 +14,12 @@ const trackersFile = dataDir + "/trackers.json";
 
 class TrackerApp implements TrackersApp {
   private _data: FeatureCollection<Point>;
-  private _api: TrackersApi;
+  private _backend: TrackersBackend;
+  private _parsers: TrackersParser[] = [];
 
   constructor() {
-    this._api = new SmsGateApp(this);
+    this._backend = new SmsGateApp(this);
+    this._parsers.push(new SmsTrackerParser());
     this._readData();
     this._startServer();
   }
@@ -27,6 +30,15 @@ class TrackerApp implements TrackersApp {
         _.properties.name === trackerNameOrNumber ||
         _.properties.number === trackerNameOrNumber
     );
+  }
+
+  parseMessage(message: string, tracker: Feature<Point>): void {
+    if (!this._parsers.some((parser) => parser.parse(message, tracker))) {
+      console.warn(
+        "no parser able to parse message:",
+        message.replace(/\r/g, "\\r").replace(/\n/g, "\\n")
+      );
+    }
   }
 
   syncTrackers() {
@@ -52,12 +64,12 @@ class TrackerApp implements TrackersApp {
             req
               .on("data", (chunk) => body.push(chunk))
               .on("end", () =>
-                this._api
+                this._backend
                   .request(body.toString())
                   .then(() => res.writeHead(200).end())
                   .catch((err) => {
                     const realErr = err.cause || err;
-                    console.log(realErr);
+                    console.error(realErr);
                     res.writeHead(500, realErr.message).end();
                   })
               );
@@ -69,12 +81,12 @@ class TrackerApp implements TrackersApp {
             req
               .on("data", (chunk) => body.push(chunk))
               .on("end", () =>
-                this._api
+                this._backend
                   .receive(body.toString())
                   .then(() => res.writeHead(200, "OK").end())
                   .catch((err) => {
                     const realErr = err.cause || err;
-                    console.log(realErr);
+                    console.error(realErr);
                     res.writeHead(500, realErr.message).end();
                   })
               );

@@ -1,6 +1,5 @@
-import { Feature, Point } from "geojson";
-import { Encryptor } from "./crypt";
-import { TrackersApi, TrackersApp } from "./types";
+import { Encryptor } from "../crypt";
+import { TrackersApp, TrackersBackend } from "../types";
 
 type SmsMessage = {
   // The unique identifier of the message.
@@ -99,7 +98,7 @@ type SystemPingEvent = WebHookEvent & {
   event: "system:ping";
 };
 
-export class SmsGateApp implements TrackersApi {
+export class SmsGateApp implements TrackersBackend {
   private _app: TrackersApp;
   private _auth: string;
   private _crypt: Encryptor;
@@ -115,7 +114,7 @@ export class SmsGateApp implements TrackersApi {
 
     if (!tracker) {
       return Promise.reject(
-        new Error(`requested tracker with '${trackerName}' is unknown`)
+        new Error(`requested tracker '${trackerName}' is unknown`)
       );
     }
 
@@ -148,71 +147,110 @@ export class SmsGateApp implements TrackersApi {
   }
 
   receive(payload: string): Promise<any> {
-    const data: WebHookEvent = JSON.parse(payload);
-    let tracker: Feature<Point>;
+    let data: WebHookEvent;
 
-    // decrypt
     try {
-      data.payload.phoneNumber = this._crypt.Decrypt(data.payload.phoneNumber);
-    } catch {}
-    try {
-      data.payload.message = this._crypt.Decrypt(data.payload.message);
-    } catch {}
+      data = JSON.parse(payload);
 
-    // find
-    tracker = this._app.getTracker(data.payload.phoneNumber);
-
-    switch (data.event) {
-      // sms delivered
-      case "sms:delivered":
-        const event1 = data as SmsDeliveredEvent;
-        console.info(
-          `sms delivered to ${event1.payload.phoneNumber} (tracker: ${tracker?.properties?.name}) at ${event1.payload.deliveredAt}`
+      // decrypt
+      try {
+        data.payload.phoneNumber = this._crypt.Decrypt(
+          data.payload.phoneNumber
         );
-        break;
+      } catch {}
+      try {
+        data.payload.message = this._crypt.Decrypt(data.payload.message);
+      } catch {}
+
+      // find tracker
+      const tracker = this._app.getTracker(data.payload.phoneNumber);
+
       // sms sent
-      case "sms:sent":
-        const event2 = data as SmsSentEvent;
+      if (data.event == "sms:sent") {
+        const event = data as SmsSentEvent;
         console.info(
-          `sms sent to ${event2.payload.phoneNumber} (tracker: ${tracker?.properties?.name}) at ${event2.payload.sentAt}`
+          `sms sent to ${event.payload.phoneNumber} (tracker: ${tracker?.properties?.name}) at ${event.payload.sentAt}`
         );
         if (tracker) {
-          tracker.properties.requested = new Date(
-            event2.payload.sentAt
+          delete tracker.properties.failed;
+          delete tracker.properties.requested;
+          tracker.properties.sent = new Date(
+            event.payload.sentAt
+          ).toISOString();
+          delete tracker.properties.delivered;
+          this._app.syncTrackers();
+        }
+      }
+
+      // sms delivered
+      else if (data.event == "sms:delivered") {
+        const event = data as SmsDeliveredEvent;
+        console.info(
+          `sms delivered to ${event.payload.phoneNumber} (tracker: ${tracker?.properties?.name}) at ${event.payload.deliveredAt}`
+        );
+        if (tracker) {
+          delete tracker.properties.failed;
+          delete tracker.properties.requested;
+          delete tracker.properties.sent;
+          tracker.properties.delivered = new Date(
+            event.payload.deliveredAt
           ).toISOString();
           this._app.syncTrackers();
         }
-        break;
+      }
+
       // sms received
-      case "sms:received":
-        const event3 = data as SmsReceivedEvent;
+      else if (data.event == "sms:received") {
+        const event = data as SmsReceivedEvent;
         console.info(
-          `sms received from ${event3.payload.phoneNumber} (tracker: ${tracker?.properties?.name}) at ${event3.payload.receivedAt}: ${event3.payload.message}`
+          `sms received from ${event.payload.phoneNumber} (tracker: ${tracker?.properties?.name}) at ${event.payload.receivedAt}:`,
+          event.payload.message.replace(/\r/g, "\\r").replace(/\n/g, "\\n")
         );
         if (tracker) {
+          delete tracker.properties.failed;
+          delete tracker.properties.requested;
+          delete tracker.properties.sent;
+          delete tracker.properties.delivered;
           tracker.properties.received = new Date(
-            event3.payload.receivedAt
+            event.payload.receivedAt
           ).toISOString();
+          this._app.parseMessage(event.payload.message, tracker);
           this._app.syncTrackers();
         }
-        break;
+      }
+
       // sms failed
-      case "sms:failed":
-        const event4 = data as SmsFailedEvent;
+      else if (data.event == "sms:failed") {
+        const event = data as SmsFailedEvent;
         console.warn(
-          `sms failed to ${event4.payload.phoneNumber} (tracker: ${tracker?.properties?.name}) at ${event4.payload.failedAt}: ${event4.payload.reason}`
+          `sms failed to ${event.payload.phoneNumber} (tracker: ${tracker?.properties?.name}) at ${event.payload.failedAt}:`,
+          event.payload.reason
         );
-        break;
+        if (tracker) {
+          tracker.properties.failed = new Date(
+            event.payload.failedAt
+          ).toISOString();
+          delete tracker.properties.requested;
+          delete tracker.properties.sent;
+          delete tracker.properties.delivered;
+          this._app.syncTrackers();
+        }
+      }
+
       // system ping
-      case "system:ping":
-        const event5 = data as SystemPingEvent;
-        console.info(`system ping: ${event5}`);
-        break;
+      else if (data.event == "system:ping") {
+        const event = data as SystemPingEvent;
+        console.info("system ping:", event);
+      }
+
       // other event
-      default:
-        console.warn("unexpected event:", JSON.stringify(data.payload));
-        break;
+      else {
+        return Promise.reject(`unexpected data: ${data}`);
+      }
+
+      return Promise.resolve();
+    } catch (err) {
+      return Promise.reject(`failed to read event: ${payload}: ${err}`);
     }
-    return Promise.resolve();
   }
 }

@@ -5,11 +5,16 @@ export type LiveTrackerConfig = {
 };
 
 export interface TrackersApp {
-  getTracker: (trackerNameOrNumber: string) => Feature<Point> | undefined;
-  syncTrackers: () => void;
+  getTracker(trackerNameOrNumber: string): Feature<Point> | undefined;
+  parseMessage(message: string, tracker: Feature<Point>): void;
+  syncTrackers(): void;
 }
 
-export interface TrackersApi {
-  request: (trackerName: string) => Promise;
-  receive: (payload: string) => Promise;
+export interface TrackersBackend {
+  request(trackerName: string): Promise;
+  receive(payload: string): Promise;
+}
+
+export interface TrackersParser {
+  parse(message: string, tracker: Feature<Point>): boolean;
 }
