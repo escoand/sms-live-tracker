@@ -1,4 +1,4 @@
-import crypto from "crypto";
+import * as crypto from "crypto";
 
 // source: https://docs.sms-gate.app/privacy/encryption/
 export class Encryptor {
