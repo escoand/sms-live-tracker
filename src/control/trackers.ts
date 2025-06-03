@@ -10,6 +10,10 @@ const texts = {
     de: "Dadurch wird eine SMS an den Tracker und eine SMS zurück gesendet. Bist du sicher?",
     _: "This will send a SMS to the tracker and a SMS back. Are you sure?",
   },
+  delivered: { de: "zugestellt" },
+  failed: { de: "Fehler" },
+  requested: { de: "angefragt" },
+  sent: { de: "gesendet" },
 };
 
 function getText(id: string): string {
@@ -38,7 +42,10 @@ export class TrackersControl extends SvgIconControl {
 
     this._container
       .appendChild(document.createElement("style"))
-      .append(".trackers td { text-align: right; }");
+      .append(
+        ".trackers td { text-align: right; }",
+        ".trackers .requested { color: grey; font-size: x-small; }"
+      );
     this._table = this._container.appendChild(document.createElement("table"));
     this._trackers = this._table.appendChild(document.createElement("tbody"));
     this._table.classList.add("trackers");
@@ -56,7 +63,6 @@ export class TrackersControl extends SvgIconControl {
     head.appendChild(document.createElement("th"));
     head.appendChild(document.createElement("th")).append("🔋");
     head.appendChild(document.createElement("th")).append("📌");
-    head.appendChild(document.createElement("th"));
     const close = head.appendChild(document.createElement("th"));
     close.innerHTML = "❌&#xFE0E;";
     close.style.color = iconColor;
@@ -123,12 +129,13 @@ export class TrackersControl extends SvgIconControl {
             row
               .appendChild(document.createElement("td"))
               .setAttribute("id", prefix + "-battery");
-            row
-              .appendChild(document.createElement("td"))
+            const cell = row.appendChild(document.createElement("td"));
+            cell
+              .appendChild(document.createElement("div"))
               .setAttribute("id", prefix + "-received");
-            row
-              .appendChild(document.createElement("td"))
-              .setAttribute("id", prefix + "-requested");
+            const requested = cell.appendChild(document.createElement("div"));
+            requested.setAttribute("id", prefix + "-requested");
+            requested.className = "requested";
             const btn = row
               .appendChild(document.createElement("td"))
               .appendChild(document.createElement("button"));
@@ -149,30 +156,19 @@ export class TrackersControl extends SvgIconControl {
 
           const received = document.getElementById(prefix + "-received");
           received.innerHTML = "";
-          if (pos.properties?.received) {
+          if (pos.geometry.coordinates.length && pos.properties?.received) {
             const date = new Date(pos.properties.received).getTime();
-            received.appendChild(document.createTextNode(timeDiff(date)));
+            received.append(timeDiff(date));
           }
 
           const requested = document.getElementById(prefix + "-requested");
           requested.innerHTML = "";
-          if (pos.properties?.failed) {
-            const date = new Date(pos.properties.failed).getTime();
-            requested.append("❌");
-            requested.setAttribute("title", timeDiff(date));
-          } else if (pos.properties?.delivered) {
-            const date = new Date(pos.properties.delivered).getTime();
-            requested.append("✅");
-            requested.setAttribute("title", timeDiff(date));
-          } else if (pos.properties?.sent) {
-            const date = new Date(pos.properties.sent).getTime();
-            requested.append("🟩");
-            requested.setAttribute("title", timeDiff(date));
-          } else if (pos.properties?.requested) {
-            const date = new Date(pos.properties.requested).getTime();
-            requested.append("🟨");
-            requested.setAttribute("title", timeDiff(date));
-          }
+          ["failed", "delivered", "sent", "requested"].some((state) => {
+            if (!pos.properties?.[state]) return false;
+            const date = new Date(pos.properties?.[state]).getTime();
+            requested.append(getText(state), ": ", timeDiff(date));
+            return true;
+          });
         });
     });
   }
