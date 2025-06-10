@@ -15,31 +15,32 @@ const store = new TrackerStore(trackersFile);
 const backend = new SmsGateApp(store);
 const app = new Hono();
 
-app.post("/api/request", (c) =>
-  c.req
+app.use(logger());
+
+app.post("/api/request", async (c) => {
+  return await c.req
     .text()
     .then((text) => backend.request(text))
-    .then(() => c.status(200))
+    .then(() => c.text("OK"))
     .catch((err) => {
       const realErr = err.cause || err;
       console.error(realErr);
       throw new HTTPException(500, { message: realErr });
-    })
-);
+    });
+});
 
-app.post("/api/receive", (c) =>
-  c.req
+app.post("/api/receive", async (c) => {
+  return await c.req
     .text()
     .then((text) => backend.receive(text))
-    .then(() => c.status(200))
+    .then(() => c.text("OK"))
     .catch((err) => {
       const realErr = err.cause || err;
       console.error(realErr);
       throw new HTTPException(500, { message: realErr });
-    })
-);
+    });
+});
 
-app.use(logger());
 app.use(etag());
 
 // static files

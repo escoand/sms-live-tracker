@@ -4,6 +4,7 @@
   },
   "tasks": {
     "build": "deno compile --allow-env --allow-net --allow-read=data,www --allow-write=data/trackers.json main.ts",
-    "start": "deno run --allow-env --allow-net --allow-read=data,www --allow-write=data/trackers.json main.ts"
+    "start": "deno run --allow-env --allow-net --allow-read=data,www --allow-write=data/trackers.json main.ts",
+    "dev": "deno run --allow-env --allow-net --allow-read=data,www --allow-write=data/trackers.json --env-file --watch main.ts"
   }
 }
