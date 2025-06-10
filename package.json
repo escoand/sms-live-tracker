@@ -6,19 +6,12 @@
   "devDependencies": {
     "@maptiler/sdk": "^3.2.0",
     "@mdi/js": "^7.4.47",
-    "@types/node": "^22.15.3",
     "browserslist-to-esbuild": "^2.1.1",
-    "esbuild": "0.25.5",
-    "typescript": "^5.8.3"
+    "esbuild": "^0.25.5",
+    "geojson": "^0.5.0",
+    "maplibre-gl": "^5.6.0"
   },
   "scripts": {
-    "build": "node build.js",
-    "start": "node --require ts-node/register src/app.ts",
-    "test": "node --require ts-node/register --test test/*.ts"
-  },
-  "dependencies": {
-    "dotenv": "^16.5.0",
-    "serve-handler": "^6.1.6",
-    "ts-node": "^10.9.2"
+    "build": "node build.js"
   }
 }

@@ -1,0 +1,9 @@
+{
+  "imports": {
+    "hono": "jsr:@hono/hono@^4.7.11"
+  },
+  "tasks": {
+    "build": "deno compile --allow-env --allow-net --allow-read=data,www --allow-write=data/trackers.json main.ts",
+    "start": "deno run --allow-env --allow-net --allow-read=data,www --allow-write=data/trackers.json main.ts"
+  }
+}

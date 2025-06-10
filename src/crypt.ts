@@ -1,4 +1,5 @@
-import * as crypto from "crypto";
+import { Buffer } from "node:buffer";
+import * as crypto from "node:crypto";
 
 // source: https://docs.sms-gate.app/privacy/encryption/
 export class Encryptor {

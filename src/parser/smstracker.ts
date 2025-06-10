@@ -1,9 +1,9 @@
-import { Feature, Point, Position } from "geojson";
-import { TrackersParser } from "../types";
+import { Feature, Point, Position } from "npm:geojson";
+import { TrackersParser } from "../types.d.ts";
 
 export class SmsTrackerParser implements TrackersParser {
   parse(message: string, tracker: Feature<Point>): boolean {
-    let coord: Position = [undefined, undefined];
+    const coord: Position = [0, 0];
     let battery = undefined;
 
     message.split(/[\r\n]+/).forEach((line) => {
@@ -16,7 +16,7 @@ export class SmsTrackerParser implements TrackersParser {
       }
     });
 
-    if (coord[0] && coord[1] && battery) {
+    if (coord[0] && coord[1] && battery && tracker.properties) {
       tracker.geometry.coordinates = coord;
       tracker.properties.battery = battery;
       return true;

@@ -1,5 +1,6 @@
-import { Encryptor } from "../crypt";
-import { TrackersApp, TrackersBackend } from "../types";
+import process from "node:process";
+import { Encryptor } from "../crypt.ts";
+import { TrackersBackend, TrackersStore } from "../types.d.ts";
 
 type SmsMessage = {
   // The unique identifier of the message.
@@ -99,18 +100,18 @@ type SystemPingEvent = WebHookEvent & {
 };
 
 export class SmsGateApp implements TrackersBackend {
-  private _app: TrackersApp;
+  private _store: TrackersStore;
   private _auth: string;
   private _crypt: Encryptor;
 
-  constructor(app: TrackersApp) {
-    this._app = app;
-    this._auth = btoa(process.env.API_AUTHENTICATION);
-    this._crypt = new Encryptor(process.env.API_ENCRYPTION);
+  constructor(store: TrackersStore) {
+    this._store = store;
+    this._auth = btoa(process.env.API_AUTHENTICATION || "");
+    this._crypt = new Encryptor(process.env.API_ENCRYPTION || "");
   }
 
   request(trackerName: string): Promise<any> {
-    const tracker = this._app.getTracker(trackerName);
+    const tracker = this._store.getTracker(trackerName);
 
     if (!tracker) {
       return Promise.reject(
@@ -120,30 +121,34 @@ export class SmsGateApp implements TrackersBackend {
 
     console.info(`request position for tracker '${trackerName}'`);
 
-    const body: SmsMessage = {
-      id: null,
-      message: this._crypt.Encrypt(process.env.API_MESSAGE),
-      phoneNumbers: [this._crypt.Encrypt(tracker.properties.number)],
-      isEncrypted: true,
-    };
+    try {
+      const body: SmsMessage = {
+        id: "",
+        message: this._crypt.Encrypt(process.env.API_MESSAGE || ""),
+        phoneNumbers: [this._crypt.Encrypt(tracker.properties?.number)],
+        isEncrypted: true,
+      };
 
-    return fetch("https://api.sms-gate.app/3rdparty/v1/messages", {
-      body: JSON.stringify(body),
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Basic ${this._auth}`,
-      },
-      method: "POST",
-    }).then((response) => {
-      if (!response.ok) {
-        return Promise.reject(
-          new Error(
-            `subrequest to ${response.url} failed (${response.status}: ${response.statusText})`
-          )
-        );
-      }
-      this._app.syncTrackers();
-    });
+      return fetch("https://api.sms-gate.app/3rdparty/v1/messages", {
+        body: JSON.stringify(body),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Basic ${this._auth}`,
+        },
+        method: "POST",
+      }).then((response) => {
+        if (!response.ok) {
+          return Promise.reject(
+            new Error(
+              `subrequest to ${response.url} failed (${response.status}: ${response.statusText})`
+            )
+          );
+        }
+        this._store.syncTrackers();
+      });
+    } catch (err) {
+      return Promise.reject(`failed to request: ${err}`);
+    }
   }
 
   receive(payload: string): Promise<any> {
@@ -163,7 +168,7 @@ export class SmsGateApp implements TrackersBackend {
       } catch {}
 
       // find tracker
-      const tracker = this._app.getTracker(data.payload.phoneNumber);
+      const tracker = this._store.getTracker(data.payload.phoneNumber);
 
       // sms sent
       if (data.event == "sms:sent") {
@@ -171,14 +176,14 @@ export class SmsGateApp implements TrackersBackend {
         console.info(
           `sms sent to ${event.payload.phoneNumber} (tracker: ${tracker?.properties?.name}) at ${event.payload.sentAt}`
         );
-        if (tracker) {
+        if (tracker && tracker.properties) {
           delete tracker.properties.failed;
           delete tracker.properties.requested;
           tracker.properties.sent = new Date(
             event.payload.sentAt
           ).toISOString();
           delete tracker.properties.delivered;
-          this._app.syncTrackers();
+          this._store.syncTrackers();
         }
       }
 
@@ -188,14 +193,14 @@ export class SmsGateApp implements TrackersBackend {
         console.info(
           `sms delivered to ${event.payload.phoneNumber} (tracker: ${tracker?.properties?.name}) at ${event.payload.deliveredAt}`
         );
-        if (tracker) {
+        if (tracker && tracker.properties) {
           delete tracker.properties.failed;
           delete tracker.properties.requested;
           delete tracker.properties.sent;
           tracker.properties.delivered = new Date(
             event.payload.deliveredAt
           ).toISOString();
-          this._app.syncTrackers();
+          this._store.syncTrackers();
         }
       }
 
@@ -206,7 +211,7 @@ export class SmsGateApp implements TrackersBackend {
           `sms received from ${event.payload.phoneNumber} (tracker: ${tracker?.properties?.name}) at ${event.payload.receivedAt}:`,
           event.payload.message.replace(/\r/g, "\\r").replace(/\n/g, "\\n")
         );
-        if (tracker) {
+        if (tracker && tracker.properties) {
           delete tracker.properties.failed;
           delete tracker.properties.requested;
           delete tracker.properties.sent;
@@ -214,8 +219,8 @@ export class SmsGateApp implements TrackersBackend {
           tracker.properties.received = new Date(
             event.payload.receivedAt
           ).toISOString();
-          this._app.parseMessage(event.payload.message, tracker);
-          this._app.syncTrackers();
+          this._store.parseMessage(event.payload.message, tracker);
+          this._store.syncTrackers();
         }
       }
 
@@ -226,14 +231,14 @@ export class SmsGateApp implements TrackersBackend {
           `sms failed to ${event.payload.phoneNumber} (tracker: ${tracker?.properties?.name}) at ${event.payload.failedAt}:`,
           event.payload.reason
         );
-        if (tracker) {
+        if (tracker && tracker.properties) {
           tracker.properties.failed = new Date(
             event.payload.failedAt
           ).toISOString();
           delete tracker.properties.requested;
           delete tracker.properties.sent;
           delete tracker.properties.delivered;
-          this._app.syncTrackers();
+          this._store.syncTrackers();
         }
       }
 

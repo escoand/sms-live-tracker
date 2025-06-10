@@ -1,6 +1,7 @@
 import browserslistToEsbuild from "browserslist-to-esbuild";
 import { build } from "esbuild";
 import { existsSync, writeFile } from "node:fs";
+import process from "node:process";
 
 const configFile = "www/config.json";
 
@@ -19,10 +20,10 @@ if (process.argv.length > 2 && !existsSync(configFile)) {
 
 await build({
   bundle: true,
-  entryPoints: ["src/index.ts"],
+  entryPoints: ["src/map.ts"],
   format: "iife",
   minify: true,
-  outdir: "www",
+  outfile: "www/index.js",
   sourcemap: true,
   target: browserslistToEsbuild(),
 });
