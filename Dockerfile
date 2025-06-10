@@ -1,5 +1,5 @@
 # frontend
-FROM library/node:alpine AS builder
+FROM docker.io/library/node:alpine AS builder
 WORKDIR /app
 COPY package* build.js .
 COPY src               src
@@ -8,7 +8,7 @@ RUN npm ci && \
     npm run build
 
 # runtime
-FROM denoland/deno:distroless
+FROM docker.io/denoland/deno:distroless
 WORKDIR /app
 COPY deno.json main.ts       .
 COPY src                     src
