@@ -17,7 +17,6 @@ export class ZoomToFitControl extends SvgIconControl {
   zoomToFit() {
     this._source.getData().then((data: FeatureCollection) => {
       const bounds: LngLatBoundsLike = data.features
-        .filter((feature) => !feature.properties?.hidden)
         .flatMap((feature) =>
           feature.geometry?.type == "LineString"
             ? feature.geometry?.coordinates

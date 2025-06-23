@@ -1,6 +1,9 @@
 {
   "deno.enablePaths": [
-    "./"
+    "./main.ts",
+    "./src/backend",
+    "./src/parser",
+    "./src/store.ts"
   ],
   "editor.inlayHints.enabled": "off"
 }

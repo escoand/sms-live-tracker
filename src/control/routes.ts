@@ -5,13 +5,14 @@ import { SvgIconControl } from "./base";
 
 export class RoutesControl extends SvgIconControl {
   private _routes: HTMLUListElement;
+  private _hidden: string[] = [];
 
   constructor(source: GeoJSONSource) {
     super(mdiGoKartTrack, source);
 
     this._routes = this._container.appendChild(document.createElement("ul"));
 
-    this._source.on("data", this._onSourceUpdated.bind(this));
+    this._source.on("data", this._updateRoutes.bind(this));
   }
 
   onAdd(map: Map) {
@@ -27,7 +28,7 @@ export class RoutesControl extends SvgIconControl {
   }
 
   onRemove() {
-    this._source.off("data", this._onSourceUpdated.bind(this));
+    this._source.off("data", this._updateRoutes.bind(this));
     super.onRemove();
   }
 
@@ -40,7 +41,9 @@ export class RoutesControl extends SvgIconControl {
     }
   }
 
-  private _updateRoutes() {
+  private _updateRoutes(evt?: MapSourceDataEvent) {
+    if (evt && evt.sourceDataType != "content") return;
+
     this._routes.innerHTML = "";
     this._source.getData().then((data: FeatureCollection) =>
       data.features
@@ -53,19 +56,27 @@ export class RoutesControl extends SvgIconControl {
             .appendChild(document.createElement("label"));
           const checkbox = entry.appendChild(document.createElement("input"));
           checkbox.type = "checkbox";
-          checkbox.checked = !feature.properties.hidden;
+          checkbox.checked = !this._hidden.includes(feature.properties.name);
           entry.append(feature.properties.name);
           checkbox.style.accentColor = feature.properties.color;
-          checkbox.addEventListener("change", () => {
-            feature.properties.hidden = !checkbox.checked;
-            this._source.setData(data);
-          });
+          checkbox.addEventListener("change", this._toggleRoute.bind(this));
         })
     );
   }
 
-  private _onSourceUpdated(evt: MapSourceDataEvent) {
-    if (evt.sourceDataType != "content") return;
-    this._updateRoutes();
-  }
+  private _toggleRoute = (evt: Event) => {
+    const checkbox = evt.target as HTMLInputElement;
+    const label = checkbox.labels[0]?.textContent;
+
+    if (!checkbox.checked) {
+      this._hidden.push(label);
+    } else {
+      for (let i = this._hidden.length; i >= 0; i--) {
+        if (this._hidden[i] === label) {
+          this._hidden.splice(i, 1);
+        }
+      }
+    }
+    this._source.map.setGlobalStateProperty("hidden", [...this._hidden]);
+  };
 }

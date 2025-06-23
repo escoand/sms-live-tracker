@@ -1,7 +1,27 @@
-import { AddLayerObject, ExpressionSpecification } from "maplibre-gl";
+import {
+  AddLayerObject,
+  ExpressionSpecification,
+  FilterSpecification,
+} from "maplibre-gl";
+
+export const iconColor = "#333";
+export const iconTransform = "scale(0.6)";
+export const iconViewBox = "0 0 24 24";
 
 export const positionsSource = "positions";
 export const routesSource = "routes";
+export const routeLines = "route-lines";
+export const routePoints = "route-points";
+export const routeTexts = "route-text";
+
+const routeFilter: FilterSpecification = [
+  "!",
+  [
+    "any",
+    ["in", ["get", "name"], ["global-state", "hidden"]],
+    ["in", ["get", "group"], ["global-state", "hidden"]],
+  ],
+];
 
 // see https://maplibre.org/maplibre-style-spec/
 
@@ -26,9 +46,10 @@ const colors: ExpressionSpecification = [
 export const layers: AddLayerObject[] = [
   // route lines
   {
-    id: "routes-line",
+    id: routeLines,
     source: routesSource,
     type: "line",
+    filter: routeFilter,
     layout: {
       "line-cap": "round",
       "line-join": "round",
@@ -41,10 +62,10 @@ export const layers: AddLayerObject[] = [
   },
   // route points
   {
-    id: "routes-points",
+    id: routePoints,
     source: routesSource,
     type: "circle",
-    filter: ["==", ["geometry-type"], "Point"],
+    filter: ["all", ["==", ["geometry-type"], "Point"], routeFilter],
     paint: {
       "circle-color": ["get", "color"],
       "circle-opacity": 0.75,
@@ -52,10 +73,10 @@ export const layers: AddLayerObject[] = [
   },
   // route text
   {
-    id: "routes-text",
+    id: routeTexts,
     source: routesSource,
     type: "symbol",
-    filter: ["==", ["geometry-type"], "Point"],
+    filter: ["all", ["==", ["geometry-type"], "Point"], routeFilter],
     layout: {
       "text-anchor": "bottom",
       "text-field": ["get", "name"],
@@ -91,7 +112,3 @@ export const layers: AddLayerObject[] = [
     },
   },
 ];
-
-export const iconColor = "#333";
-export const iconTransform = "scale(0.6)";
-export const iconViewBox = "0 0 24 24";
