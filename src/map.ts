@@ -7,15 +7,18 @@ import {
   MapLibreEvent,
   NavigationControl,
   ScaleControl,
-} from "maplibre-gl";
+} from "maplibre-gl/dist/maplibre-gl";
 import { layers, positionsSource, routesSource } from "./const";
 import { ErrorControl } from "./control/error";
+import { ExportControl } from "./control/export";
 import { RoutesControl } from "./control/routes";
+import { StyleSwitcherControl } from "./control/styleswitcher";
 import { TrackersControl } from "./control/trackers";
 import { ZoomToFitControl } from "./control/zoomtofit";
 import { LiveTrackerConfig } from "./types";
 
-import "../node_modules/@maptiler/sdk/dist/maptiler-sdk.css";
+import "@maptiler/sdk/dist/maptiler-sdk.css";
+import "@watergis/maplibre-gl-export/dist/maplibre-gl-export.css";
 
 class LiveTrackerMap {
   private _config: LiveTrackerConfig | undefined = undefined;
@@ -71,10 +74,17 @@ class LiveTrackerMap {
     map.addControl(new ScaleControl());
     map.addControl(new FullscreenControl());
     map.addControl(new GeolocateControl({}));
+    map.addControl(
+      new StyleSwitcherControl([
+        `https://api.maptiler.com/maps/topo-v2/style@2x.json?key=${this._config?.apiKey}`,
+        `https://api.maptiler.com/maps/hybrid/style@2x.json?key=${this._config?.apiKey}`,
+      ])
+    );
     map.addControl(new NavigationControl(), "bottom-right");
     map.addControl(zoomControl, "bottom-right");
     map.addControl(new RoutesControl(routes), "top-right");
     map.addControl(new TrackersControl(positions), "top-left");
+    map.addControl(new ExportControl());
 
     // add events
     routes.once("data", () => zoomControl.zoomToFit());

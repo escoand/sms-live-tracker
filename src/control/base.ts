@@ -17,6 +17,20 @@ export abstract class SvgIconControl implements IControl {
     this._container.className = "maplibregl-ctrl maplibregl-ctrl-group";
     this._button.type = "button";
 
+    const icon = this._button.appendChild(document.createElement("span"));
+    icon.className = "maplibregl-ctrl-icon";
+    icon.style.transform = iconTransform;
+    icon.style.backgroundImage = SvgIconControl.createSvg(svgIconPath);
+  }
+
+  abstract onAdd(map: Map);
+
+  onRemove() {
+    this._source = undefined;
+    this._container.parentNode.removeChild(this._container);
+  }
+
+  static createSvg(svgIconPath: string) {
     const svg = document.createElementNS(svgNamespace, "svg");
     svg.setAttribute("xmlns", svgNamespace);
     svg.setAttribute("fill", iconColor);
@@ -25,17 +39,8 @@ export abstract class SvgIconControl implements IControl {
       .appendChild(document.createElementNS(svgNamespace, "path"))
       .setAttribute("d", svgIconPath);
 
-    const icon = this._button.appendChild(document.createElement("span"));
-    icon.className = "maplibregl-ctrl-icon";
-    icon.style.transform = iconTransform;
-    icon.style.backgroundImage =
-      'url("data:image/svg+xml,' + encodeURIComponent(svg.outerHTML) + '")';
-  }
-
-  abstract onAdd(map: Map);
-
-  onRemove() {
-    this._source = undefined;
-    this._container.parentNode.removeChild(this._container);
+    return (
+      'url("data:image/svg+xml,' + encodeURIComponent(svg.outerHTML) + '")'
+    );
   }
 }

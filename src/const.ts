@@ -2,7 +2,7 @@ import {
   AddLayerObject,
   ExpressionSpecification,
   FilterSpecification,
-} from "maplibre-gl";
+} from "maplibre-gl/dist/maplibre-gl";
 
 export const iconColor = "#333";
 export const iconTransform = "scale(0.6)";
@@ -69,6 +69,8 @@ export const layers: AddLayerObject[] = [
     paint: {
       "circle-color": ["get", "color"],
       "circle-opacity": 0.75,
+      "circle-stroke-color": "white",
+      "circle-stroke-width": 1,
     },
   },
   // route text
@@ -80,10 +82,13 @@ export const layers: AddLayerObject[] = [
     layout: {
       "text-anchor": "bottom",
       "text-field": ["get", "name"],
+      "text-font": ["Open Sans Bold"],
       "text-offset": [0, -0.5],
     },
     paint: {
       "text-color": ["get", "color"],
+      "text-halo-color": "white",
+      "text-halo-width": 1,
     },
   },
   // tracker icons
@@ -106,9 +111,12 @@ export const layers: AddLayerObject[] = [
     layout: {
       "text-anchor": "center",
       "text-field": ["get", "name"],
+      "text-font": ["Open Sans Bold"],
     },
     paint: {
       "text-color": colors,
+      "text-halo-color": "white",
+      "text-halo-width": 1,
     },
   },
 ];
