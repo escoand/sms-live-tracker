@@ -1,6 +1,12 @@
 import { mdiFitToPageOutline } from "@mdi/js";
 import { FeatureCollection } from "geojson";
-import { GeoJSONSource, LngLatBoundsLike, Map } from "maplibre-gl";
+import {
+  GeoJSONSource,
+  LngLatBounds,
+  LngLatBoundsLike,
+  LngLatLike,
+  Map,
+} from "maplibre-gl";
 import { SvgIconControl } from "./base";
 
 export class ZoomToFitControl extends SvgIconControl {
@@ -27,20 +33,11 @@ export class ZoomToFitControl extends SvgIconControl {
             : []
         )
         .reduce(
-          (sum, [lon, lat]) => [
-            [
-              lon < sum[0][0] ? lon : sum[0][0],
-              lat < sum[0][1] ? lat : sum[0][1],
-            ],
-            [
-              lon > sum[1][0] ? lon : sum[1][0],
-              lat > sum[1][1] ? lat : sum[1][1],
-            ],
-          ],
-          [
-            [Number.MAX_VALUE, Number.MAX_VALUE],
-            [Number.MIN_VALUE, Number.MIN_VALUE],
-          ]
+          (bounds, coord) => bounds.extend(coord as LngLatLike),
+          new LngLatBounds([
+            [Number.MAX_VALUE, 90],
+            [Number.MIN_VALUE, -90],
+          ])
         );
       this._source.map.fitBounds(bounds, { padding: 50 });
     });
