@@ -1,8 +1,8 @@
-import { Hono } from "hono";
-import { serveStatic } from "hono/deno";
-import { etag } from "hono/etag";
-import { HTTPException } from "hono/http-exception";
-import { logger } from "hono/logger";
+import { Hono } from "npm:hono";
+import { serveStatic } from "npm:hono/deno";
+import { etag } from "npm:hono/etag";
+import { HTTPException } from "npm:hono/http-exception";
+import { logger } from "npm:hono/logger";
 import { SmsGateApp } from "./src/backend/smsgateapp.ts";
 import { TrackerStore } from "./src/store.ts";
 

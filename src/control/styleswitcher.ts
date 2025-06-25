@@ -1,5 +1,5 @@
 import { mdiLayers } from "@mdi/js";
-import { Map } from "maplibre-gl/dist/maplibre-gl";
+import { LineLayerSpecification, Map } from "maplibre-gl/dist/maplibre-gl";
 import { positionsSource, routesSource } from "../const";
 import { SvgIconControl } from "./base";
 
@@ -22,7 +22,9 @@ export class StyleSwitcherControl extends SvgIconControl {
           next.sources[routesSource] = prev.sources[routesSource];
           next.sources[positionsSource] = prev.sources[positionsSource];
           prev.layers
-            .filter((_) => [routesSource, positionsSource].includes(_.source))
+            .filter((_: LineLayerSpecification) =>
+              [routesSource, positionsSource].includes(_.source)
+            )
             .forEach((_) => next.layers.push(_));
           return next;
         },

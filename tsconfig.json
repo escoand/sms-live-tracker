@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "allowSyntheticDefaultImports": true,
+    "lib": ["DOM", "ES2019"],
     "outDir": "www",
     "skipLibCheck": true
   }

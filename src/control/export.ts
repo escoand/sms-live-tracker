@@ -87,11 +87,8 @@ export class ExportControl extends MaplibreExportControl {
     const clientWidth = this.map?.getCanvas().clientWidth * currentZoom;
     const clientHeight = this.map?.getCanvas().clientHeight * currentZoom;
     const zoom = Math.min(clientWidth / width, clientHeight / height);
-
-    if (zoom < 1) {
-      this.map.getContainer().style.zoom = zoom;
-      this.map.getContainer().lastChild.style.zoom = 1 / zoom;
-    }
+    this.map.getContainer().style.zoom = zoom < 1 ? zoom : null;
+    this.map.getContainer().lastChild.style.zoom = zoom < 1 ? 1 / zoom : null;
 
     // @ts-expect-error
     super.updatePrintableArea();

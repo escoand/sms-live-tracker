@@ -1,7 +1,6 @@
 import { mdiAccountGroup } from "@mdi/js";
 import { Feature, FeatureCollection, Point } from "geojson";
 import { GeoJSONSource, Map, MapSourceDataEvent } from "maplibre-gl";
-import { createError } from "../common";
 import { iconColor } from "../const";
 import { SvgIconControl } from "./base";
 
@@ -31,6 +30,11 @@ function timeDiff(then: number, now: number = Date.now()): string {
   if (days) result += days + "d ";
   if (days || hours) result += hours + "h ";
   return result + mins + "min";
+}
+
+function createError(msg: string): ErrorEvent {
+  // @ts-expect-error
+  return { error: new Error(msg), type: "error" };
 }
 
 export class TrackersControl extends SvgIconControl {

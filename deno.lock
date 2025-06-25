@@ -1,21 +1,21 @@
 {
   "version": "5",
   "specifiers": {
-    "jsr:@hono/hono@^4.7.11": "4.7.11",
-    "npm:@maptiler/sdk@^3.2.0": "3.3.0",
-    "npm:@mdi/js@^7.4.47": "7.4.47",
+    "npm:@maptiler/sdk@*": "3.4.1",
+    "npm:@mdi/js@*": "7.4.47",
     "npm:@types/node@*": "22.15.15",
-    "npm:browserslist-to-esbuild@^2.1.1": "2.1.1_browserslist@4.25.0",
-    "npm:esbuild@~0.25.5": "0.25.5",
-    "npm:geojson@0.5": "0.5.0",
+    "npm:@watergis/maplibre-gl-export@*": "4.0.1",
+    "npm:browserslist-to-esbuild@*": "2.1.1_browserslist@4.25.0",
+    "npm:esbuild@*": "0.25.5",
+    "npm:geojson@*": "0.5.0",
+    "npm:hono@*": "4.8.3",
+    "npm:maplibre-gl@*": "5.6.0",
     "npm:maplibre-gl@^5.6.0": "5.6.0"
   },
-  "jsr": {
-    "@hono/hono@4.7.11": {
-      "integrity": "52b9395e4f2448fbaf82a6bd7925d15e59f4055037e74d6c2f657f3618b11193"
-    }
-  },
   "npm": {
+    "@babel/runtime@7.27.6": {
+      "integrity": "sha512-vbavdySgbTTrmFE+EsiqUTzlOr5bzlnJtUv9PynGCAKvfQqjIXbvFdumPM/GxMDfyuGMJaJAU6TO4zc1Jf1i8Q=="
+    },
     "@esbuild/aix-ppc64@0.25.5": {
       "integrity": "sha512-9o3TMmpmftaCMepOdA5k/yDw8SfInyzWWTjYTFCX3kPSDJMROQTb8jg+h9Cnwnmm1vOzvxN7gIfB5V2ewpjtGA==",
       "os": ["aix"],
@@ -189,8 +189,8 @@
         "quick-lru"
       ]
     },
-    "@maptiler/sdk@3.3.0": {
-      "integrity": "sha512-GiY0R+o4/j6FVpQmvtRCaDBBK+34V4VMlzJIaLKBAqLzCdwPVgD3yCJqMgCrxyBDghiIFcr/LAFSXddAFleF4g==",
+    "@maptiler/sdk@3.4.1": {
+      "integrity": "sha512-6WlTjsEkHu0dX85pPw2ZiOq2qzKzKvNKC9NNm7ms9nmO41pUH90DMYZuGe57c8OJjWhuRIqPSy3qCFbLn70/iQ==",
       "dependencies": [
         "@maplibre/maplibre-gl-style-spec",
         "@maptiler/client",
@@ -232,11 +232,31 @@
     "@types/pbf@3.0.5": {
       "integrity": "sha512-j3pOPiEcWZ34R6a6mN07mUkM4o4Lwf6hPNt8eilOeZhTFbxFXmKhvXl9Y28jotFPaI1bpPDJsbCprUoNke6OrA=="
     },
+    "@types/raf@3.4.3": {
+      "integrity": "sha512-c4YAvMedbPZ5tEyxzQdMoOhhJ4RD3rngZIdwC2/qDN3d7JpEhB6fiBRKVY1lg5B7Wk+uPBjn5f39j1/2MY1oOw=="
+    },
     "@types/supercluster@7.1.3": {
       "integrity": "sha512-Z0pOY34GDFl3Q6hUFYf3HkTwKEE02e7QgtJppBt+beEAxnyOpJua+voGFvxINBHa06GwLFFym7gRPY2SiKIfIA==",
       "dependencies": [
         "@types/geojson"
       ]
+    },
+    "@types/trusted-types@2.0.7": {
+      "integrity": "sha512-ScaPdn1dQczgbl0QFTeTOmVHFULt394XJgOQNoyVhZ6r2vLnMLJfBPd53SB52T/3G36VI1/g2MZaX0cwDuXsfw=="
+    },
+    "@watergis/maplibre-gl-export@4.0.1": {
+      "integrity": "sha512-9wMbB6N9J/PUPG4Akw7y7FCFy8WAZdBdWOVp5R87NL0rLFqq0C1RGz+H7kt+vEW+l0s6aIaJyFpSX9JCT5YI6A==",
+      "dependencies": [
+        "jspdf",
+        "maplibre-gl"
+      ]
+    },
+    "atob@2.1.2": {
+      "integrity": "sha512-Wm6ukoaOGJi/73p/cl2GvLjTI5JM1k/O14isD73YML8StrH/7/lRFgmg8nICZgD3bZZvjwCGxtMOD3wWNAu8cg==",
+      "bin": true
+    },
+    "base64-arraybuffer@1.0.2": {
+      "integrity": "sha512-I3yl4r9QB5ZRY3XuJVEPfc2XhZO6YweFPI+UovAzn+8/hb3oJ6lnysaFcjVpkCPfVWFUDvoZ8kmVDP7WyRtYtQ=="
     },
     "browserslist-to-esbuild@2.1.1_browserslist@4.25.0": {
       "integrity": "sha512-KN+mty6C3e9AN8Z5dI1xeN15ExcRNeISoC3g7V0Kax/MMF9MSoYA2G7lkTTcVUFntiEjkpI0HNgqJC1NjdyNUw==",
@@ -256,8 +276,41 @@
       ],
       "bin": true
     },
+    "btoa@1.2.1": {
+      "integrity": "sha512-SB4/MIGlsiVkMcHmT+pSmIPoNDoHg+7cMzmt3Uxt628MTz2487DKSqK/fuhFBrkuqrYv5UCEnACpF4dTFNKc/g==",
+      "bin": true
+    },
     "caniuse-lite@1.0.30001721": {
       "integrity": "sha512-cOuvmUVtKrtEaoKiO0rSc29jcjwMwX5tOHDy4MgVFEWiUXj4uBMJkwI8MDySkgXidpMiHUcviogAvFi4pA2hDQ=="
+    },
+    "canvg@3.0.11": {
+      "integrity": "sha512-5ON+q7jCTgMp9cjpu4Jo6XbvfYwSB2Ow3kzHKfIyJfaCAOHLbdKPQqGKgfED/R5B+3TFFfe8pegYA+b423SRyA==",
+      "dependencies": [
+        "@babel/runtime",
+        "@types/raf",
+        "core-js",
+        "raf",
+        "regenerator-runtime",
+        "rgbcolor",
+        "stackblur-canvas",
+        "svg-pathdata"
+      ]
+    },
+    "core-js@3.43.0": {
+      "integrity": "sha512-N6wEbTTZSYOY2rYAn85CuvWWkCK6QweMn7/4Nr3w+gDBeBhk/x4EJeY6FPo4QzDoJZxVTv8U7CMvgWk6pOHHqA==",
+      "scripts": true
+    },
+    "css-line-break@2.1.0": {
+      "integrity": "sha512-FHcKFCZcAha3LwfVBhCQbW2nCNbkZXn7KVUJcsT5/P8YmfsVja0FMPJr0B903j/E69HUphKiV9iQArX8SDYA4w==",
+      "dependencies": [
+        "utrie"
+      ]
+    },
+    "dompurify@3.2.6": {
+      "integrity": "sha512-/2GogDQlohXPZe6D6NOgQvXLPSYBqIWMnZ8zzOhn09REE4eyAzb+Hed3jhoM9OkuaJ8P6ZGTTVWQKAi8ieIzfQ==",
+      "optionalDependencies": [
+        "@types/trusted-types"
+      ]
     },
     "earcut@3.0.1": {
       "integrity": "sha512-0l1/0gOjESMeQyYaK5IDiPNvFeu93Z/cO0TjZh9eZ1vyCtZnA7KMZ8rQggpsJHIbGSdrqYq9OhuveadOVHCshw=="
@@ -303,6 +356,9 @@
     "events@3.3.0": {
       "integrity": "sha512-mQw+2fkQbALzQ7V0MY0IqdnXNOeTtP4r0lN9z7AAawCXgqea7bDii20AYrIBrFd/Hx0M2Ocz6S111CaFkUcb0Q=="
     },
+    "fflate@0.8.2": {
+      "integrity": "sha512-cPJU47OaAoCbg0pBvzsgpTPhmhqI5eJjh/JIu8tPj5q+T7iLvW/JAYUqmE7KOB4R1ZyEhzBaIQpQpardBF5z8A=="
+    },
     "geojson-vt@4.0.2": {
       "integrity": "sha512-AV9ROqlNqoZEIJGfm1ncNjEXfkz2hdFlZf0qkVfmkwdKa8vj7H16YUOT81rJw1rdFhyEDlN2Tds91p/glzbl5A=="
     },
@@ -323,6 +379,16 @@
         "which"
       ]
     },
+    "hono@4.8.3": {
+      "integrity": "sha512-jYZ6ZtfWjzBdh8H/0CIFfCBHaFL75k+KMzaM177hrWWm2TWL39YMYaJgB74uK/niRc866NMlH9B8uCvIo284WQ=="
+    },
+    "html2canvas@1.4.1": {
+      "integrity": "sha512-fPU6BHNpsyIhr8yyMpTLLxAbkaK8ArIBcmZIRiBLiDhjeqvXolaEmDGmELFuX9I4xDcaKKcJl+TKZLqruBbmWA==",
+      "dependencies": [
+        "css-line-break",
+        "text-segmentation"
+      ]
+    },
     "ieee754@1.2.1": {
       "integrity": "sha512-dcyqhDvX1C46lXZcVqCpK+FtMRQVdIMN6/Df5js2zouUsqG7I6sFxitIC+7KYK29KdXOLHdu9zL4sFnoVQnqaA=="
     },
@@ -337,6 +403,21 @@
     },
     "json-stringify-pretty-compact@4.0.0": {
       "integrity": "sha512-3CNZ2DnrpByG9Nqj6Xo8vqbjT4F6N+tb4Gb28ESAZjYZ5yqvmc56J+/kuIwkaAMOyblTQhUW7PxMkUb8Q36N3Q=="
+    },
+    "jspdf@3.0.1": {
+      "integrity": "sha512-qaGIxqxetdoNnFQQXxTKUD9/Z7AloLaw94fFsOiJMxbfYdBbrBuhWmbzI8TVjrw7s3jBY1PFHofBKMV/wZPapg==",
+      "dependencies": [
+        "@babel/runtime",
+        "atob",
+        "btoa",
+        "fflate"
+      ],
+      "optionalDependencies": [
+        "canvg",
+        "core-js",
+        "dompurify",
+        "html2canvas"
+      ]
     },
     "kdbush@4.0.2": {
       "integrity": "sha512-WbCVYJ27Sz8zi9Q7Q0xHC+05iwkm3Znipc2XTlrnJbsHMYktW4hPhXUE8Ys1engBrvffoSCqbil1JQAa7clRpA=="
@@ -395,6 +476,9 @@
       ],
       "bin": true
     },
+    "performance-now@2.1.0": {
+      "integrity": "sha512-7EAHlyLHI56VEIdK57uwHdHKIaAGbnXPiw0yWbarQZOKaKpvUIgW0jWRVLiatnM+XXlSwsanIBH/hzGMJulMow=="
+    },
     "picocolors@1.1.1": {
       "integrity": "sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA=="
     },
@@ -410,19 +494,43 @@
     "quickselect@3.0.0": {
       "integrity": "sha512-XdjUArbK4Bm5fLLvlm5KpTFOiOThgfWWI4axAZDWg4E/0mKdZyI9tNEfds27qCi1ze/vwTR16kvmmGhRra3c2g=="
     },
+    "raf@3.4.1": {
+      "integrity": "sha512-Sq4CW4QhwOHE8ucn6J34MqtZCeWFP2aQSmrlroYgqAV1PjStIhJXxYuTgUIfkEk7zTLjmIjLmU5q+fbD1NnOJA==",
+      "dependencies": [
+        "performance-now"
+      ]
+    },
+    "regenerator-runtime@0.13.11": {
+      "integrity": "sha512-kY1AZVr2Ra+t+piVaJ4gxaFaReZVH40AKNo7UCX6W+dEwBo/2oZJzqfuN1qLq1oL45o56cPaTXELwrTh8Fpggg=="
+    },
     "resolve-protobuf-schema@2.1.0": {
       "integrity": "sha512-kI5ffTiZWmJaS/huM8wZfEMer1eRd7oJQhDuxeCLe3t7N7mX3z94CN0xPxBQxFYQTSNz9T0i+v6inKqSdK8xrQ==",
       "dependencies": [
         "protocol-buffers-schema"
       ]
     },
+    "rgbcolor@1.0.1": {
+      "integrity": "sha512-9aZLIrhRaD97sgVhtJOW6ckOEh6/GnvQtdVNfdZ6s67+3/XwLS9lBcQYzEEhYVeUowN7pRzMLsyGhK2i/xvWbw=="
+    },
     "rw@1.3.3": {
       "integrity": "sha512-PdhdWy89SiZogBLaw42zdeqtRJ//zFd2PgQavcICDUgJT5oW10QCRKbJ6bg4r0/UY2M6BWd5tkxuGFRvCkgfHQ=="
+    },
+    "stackblur-canvas@2.7.0": {
+      "integrity": "sha512-yf7OENo23AGJhBriGx0QivY5JP6Y1HbrrDI6WLt6C5auYZXlQrheoY8hD4ibekFKz1HOfE48Ww8kMWMnJD/zcQ=="
     },
     "supercluster@8.0.1": {
       "integrity": "sha512-IiOea5kJ9iqzD2t7QJq/cREyLHTtSmUT6gQsweojg9WH2sYJqZK9SswTu6jrscO6D1G5v5vYZ9ru/eq85lXeZQ==",
       "dependencies": [
         "kdbush"
+      ]
+    },
+    "svg-pathdata@6.0.3": {
+      "integrity": "sha512-qsjeeq5YjBZ5eMdFuUa4ZosMLxgr5RZ+F+Y1OrDhuOCEInRMA3x74XdBtggJcj9kOeInz0WE+LgCPDkZFlBYJw=="
+    },
+    "text-segmentation@1.0.3": {
+      "integrity": "sha512-iOiPUo/BGnZ6+54OsWxZidGCsdU8YbE4PSpdPinp7DeMtUJNJBoJ/ouUSTJjHkh1KntHaltHl/gDs2FC4i5+Nw==",
+      "dependencies": [
+        "utrie"
       ]
     },
     "tinyqueue@3.0.0": {
@@ -439,6 +547,12 @@
         "picocolors"
       ],
       "bin": true
+    },
+    "utrie@1.0.2": {
+      "integrity": "sha512-1MLa5ouZiOmQzUbjbu9VmjLzn1QLXBhwpUa7kdLUQK+KQ5KA9I1vk5U4YHe/X2Ch7PYnJfWuWT+VbuxbGwljhw==",
+      "dependencies": [
+        "base64-arraybuffer"
+      ]
     },
     "uuid@11.1.0": {
       "integrity": "sha512-0/A9rDy9P7cJ+8w1c9WD9V//9Wj15Ce2MPz8Ri6032usz+NfePxx5AcN3bN+r6ZL6jEo066/yNYB3tn4pQEx+A==",
@@ -462,17 +576,14 @@
   },
   "workspace": {
     "dependencies": [
-      "jsr:@hono/hono@^4.7.11"
-    ],
-    "packageJson": {
-      "dependencies": [
-        "npm:@maptiler/sdk@^3.2.0",
-        "npm:@mdi/js@^7.4.47",
-        "npm:browserslist-to-esbuild@^2.1.1",
-        "npm:esbuild@~0.25.5",
-        "npm:geojson@0.5",
-        "npm:maplibre-gl@^5.6.0"
-      ]
-    }
+      "npm:@maptiler/sdk@*",
+      "npm:@mdi/js@*",
+      "npm:@watergis/maplibre-gl-export@*",
+      "npm:browserslist-to-esbuild@*",
+      "npm:esbuild@*",
+      "npm:geojson@*",
+      "npm:hono@*",
+      "npm:maplibre-gl@*"
+    ]
   }
 }

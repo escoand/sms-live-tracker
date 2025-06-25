@@ -76,8 +76,8 @@ class LiveTrackerMap {
     map.addControl(new GeolocateControl({}));
     map.addControl(
       new StyleSwitcherControl([
-        `https://api.maptiler.com/maps/topo-v2/style@2x.json?key=${this._config?.apiKey}`,
-        `https://api.maptiler.com/maps/hybrid/style@2x.json?key=${this._config?.apiKey}`,
+        `https://api.maptiler.com/maps/topo-v2/style.json?key=${this._config?.apiKey}`,
+        `https://api.maptiler.com/maps/hybrid/style.json?key=${this._config?.apiKey}`,
       ])
     );
     map.addControl(new NavigationControl(), "bottom-right");

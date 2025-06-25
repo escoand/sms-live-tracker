@@ -1,11 +1,11 @@
 # frontend
-FROM docker.io/library/node:alpine AS builder
+FROM docker.io/denoland/deno:alpine AS builder
 WORKDIR /app
-COPY package* build.js .
+COPY deno* build.js .
 COPY src               src
 COPY www               www
-RUN npm ci && \
-    npm run build
+RUN deno install && \
+    deno task build
 
 # runtime
 FROM docker.io/denoland/deno:distroless
@@ -13,7 +13,7 @@ WORKDIR /app
 COPY deno.json main.ts       .
 COPY src                     src
 COPY --from=builder /app/www www
-RUN [ "deno", "cache", "main.ts" ],
+RUN [ "deno", "install", "--entrypoint", "main.ts" ],
 CMD [ "task", "start" ]
 
 VOLUME /app/data
