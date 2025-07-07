@@ -8,7 +8,15 @@ import {
   NavigationControl,
   ScaleControl,
 } from "maplibre-gl/dist/maplibre-gl";
-import { layers, positionsSource, routesSource } from "./const";
+import {
+  layers,
+  positionsSource,
+  routeFilter,
+  routeLines,
+  routesSource,
+  routeTexts,
+  styles,
+} from "./const";
 import { ErrorControl } from "./control/error";
 import { ExportControl } from "./control/export";
 import { RoutesControl } from "./control/routes";
@@ -19,6 +27,7 @@ import { LiveTrackerConfig } from "./types";
 
 import "@maptiler/sdk/dist/maptiler-sdk.css";
 import "@watergis/maplibre-gl-export/dist/maplibre-gl-export.css";
+import { IntervalControl } from "./control/interval";
 
 class LiveTrackerMap {
   private _config: LiveTrackerConfig | undefined = undefined;
@@ -42,7 +51,7 @@ class LiveTrackerMap {
       attributionControl: false,
       center: [0, 0],
       container,
-      style: `https://api.maptiler.com/maps/topo/style.json?key=${this._config?.apiKey}`,
+      style: styles[0].replace("{apiKey}", this._config?.apiKey),
     });
 
     this._map.on("error", this._onError.bind(this));
@@ -71,14 +80,21 @@ class LiveTrackerMap {
 
     // add controls
     const zoomControl = new ZoomToFitControl(routes);
+    const intervalControl = new IntervalControl(
+      routes,
+      routeLines,
+      routeTexts,
+      routeFilter
+    );
     map.addControl(new ScaleControl());
     map.addControl(new FullscreenControl());
     map.addControl(new GeolocateControl({}));
+    map.addControl(intervalControl);
     map.addControl(
-      new StyleSwitcherControl([
-        `https://api.maptiler.com/maps/topo-v2/style.json?key=${this._config?.apiKey}`,
-        `https://api.maptiler.com/maps/hybrid/style.json?key=${this._config?.apiKey}`,
-      ])
+      new StyleSwitcherControl(
+        styles.map((_) => _.replace("{apiKey}", this._config?.apiKey)),
+        [routesSource, positionsSource, intervalControl.getId()]
+      )
     );
     map.addControl(new NavigationControl(), "bottom-right");
     map.addControl(zoomControl, "bottom-right");

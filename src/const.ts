@@ -14,7 +14,12 @@ export const routeLines = "route-lines";
 export const routePoints = "route-points";
 export const routeTexts = "route-text";
 
-const routeFilter: FilterSpecification = [
+export const styles = [
+  `https://api.maptiler.com/maps/topo-v2/style.json?key={apiKey}`,
+  `https://api.maptiler.com/maps/hybrid/style.json?key={apiKey}`,
+];
+
+export const routeFilter: FilterSpecification = [
   "!",
   [
     "any",
@@ -25,22 +30,25 @@ const routeFilter: FilterSpecification = [
 
 // see https://maplibre.org/maplibre-style-spec/
 
-const colors: ExpressionSpecification = [
-  "interpolate",
-  ["linear"],
-  ["/", ["-", ["to-number", ["get", "name"]], 19], 15],
-  0.0,
-  "blue",
-  0.1,
-  "royalblue",
-  0.3,
-  "cyan",
-  0.5,
-  "lime",
-  0.7,
-  "yellow",
-  1.0,
-  "red",
+const brightness: ExpressionSpecification = [
+  "let",
+  "rgba",
+  ["to-rgba", ["to-color", ["get", "color"]]],
+  // https://www.w3.org/TR/AERT/#color-contrast
+  [
+    "+",
+    ["*", ["at", 1, ["var", "rgba"]], 0.299],
+    ["*", ["at", 2, ["var", "rgba"]], 0.587],
+    ["*", ["at", 3, ["var", "rgba"]], 0.114],
+  ],
+];
+
+export const blackWhiteForeground: ExpressionSpecification = [
+  "step",
+  brightness,
+  "black",
+  125,
+  "white",
 ];
 
 export const layers: AddLayerObject[] = [
@@ -56,7 +64,7 @@ export const layers: AddLayerObject[] = [
     },
     paint: {
       "line-color": ["get", "color"],
-      "line-opacity": ["case", ["boolean", ["get", "hidden"], false], 0, 0.75],
+      "line-opacity": 0.75,
       "line-width": 5,
     },
   },
@@ -99,7 +107,7 @@ export const layers: AddLayerObject[] = [
     paint: {
       "circle-color": "transparent",
       "circle-radius": 12,
-      "circle-stroke-color": colors,
+      "circle-stroke-color": ["get", "color"],
       "circle-stroke-width": 2,
     },
   },
@@ -114,8 +122,8 @@ export const layers: AddLayerObject[] = [
       "text-font": ["Open Sans Bold"],
     },
     paint: {
-      "text-color": colors,
-      "text-halo-color": "white",
+      "text-color": ["get", "color"],
+      "text-halo-color": blackWhiteForeground,
       "text-halo-width": 1,
     },
   },
