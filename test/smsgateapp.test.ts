@@ -1,7 +1,7 @@
-import { Feature, Point } from "geojson";
 import { suite, test } from "node:test";
-import { SmsGateApp } from "../src/api/smsgateapp";
-import { TrackersApp } from "../src/types";
+import { Feature, Point } from "npm:geojson";
+import { SmsGateApp } from "../src/backend/smsgateapp.ts";
+import { TrackersStore } from "../src/types.d.ts";
 
 const tracker: Feature<Point> = {
   type: "Feature",
@@ -16,7 +16,7 @@ const tracker: Feature<Point> = {
   },
 };
 
-const mockApi = (tracker: Feature<Point>): TrackersApp => ({
+const mockApi = (tracker: Feature<Point>): TrackersStore => ({
   getTracker(trackerNameOrNumber: string): Feature<Point> | undefined {
     return tracker;
   },
@@ -85,6 +85,7 @@ suite("sms-gate.app backend", async () => {
   });
 
   test("unknown tracker", async (fn) => {
+    // @ts-ignore skip type check for null
     const api = new SmsGateApp(mockApi(null));
     api.receive(testData("sms:received", "wrongDateAttribute"));
   });
