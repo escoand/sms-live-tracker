@@ -19,6 +19,7 @@ import {
 } from "./const";
 import { ErrorControl } from "./control/error";
 import { ExportControl } from "./control/export";
+import { IntervalControl } from "./control/interval";
 import { RoutesControl } from "./control/routes";
 import { StyleSwitcherControl } from "./control/styleswitcher";
 import { TrackersControl } from "./control/trackers";
@@ -27,7 +28,6 @@ import { LiveTrackerConfig } from "./types";
 
 import "@maptiler/sdk/dist/maptiler-sdk.css";
 import "@watergis/maplibre-gl-export/dist/maplibre-gl-export.css";
-import { IntervalControl } from "./control/interval";
 
 class LiveTrackerMap {
   private _config: LiveTrackerConfig | undefined = undefined;

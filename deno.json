@@ -15,7 +15,7 @@
     "start": "deno run --allow-env --allow-net --allow-read=data,www --allow-write=data/trackers.json main.ts",
     "dev": "deno task dev:server & deno task dev:client",
     "dev:client": "deno run --allow-env --allow-read --allow-run --allow-write=www npm:esbuild --bundle --outfile=www/index.js --sourcemap --watch src/map.ts",
-    "dev:server": "deno run --allow-env --allow-net --allow-read=data,www --allow-write=data/trackers.json --env-file --watch main.ts"
+    "dev:server": "deno serve --allow-env --allow-net --allow-read=data,www --allow-write=data/trackers.json --env-file --watch main.ts"
   },
   "nodeModulesDir": "auto"
 }

@@ -17,4 +17,4 @@ RUN [ "deno", "install", "--entrypoint", "main.ts" ],
 CMD [ "task", "start" ]
 
 VOLUME /app/data
-EXPOSE 3000
+EXPOSE 8000

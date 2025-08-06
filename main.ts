@@ -6,7 +6,6 @@ import { logger } from "npm:hono/logger";
 import { SmsGateApp } from "./src/backend/smsgateapp.ts";
 import { TrackerStore } from "./src/store.ts";
 
-const port = 3000;
 const dataDir = "data";
 const staticDir = "www";
 const trackersFile = dataDir + "/trackers.json";
@@ -47,4 +46,6 @@ app.use(etag());
 app.get("/*.json", serveStatic({ root: dataDir }));
 app.get("*", serveStatic({ root: staticDir }));
 
-Deno.serve({ port }, app.fetch);
+export default {
+  fetch: app.fetch,
+} satisfies Deno.ServeDefaultExport;
