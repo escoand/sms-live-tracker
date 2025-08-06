@@ -1,115 +1,67 @@
 import { Buffer } from "node:buffer";
-import * as crypto from "node:crypto";
+import crypto from "node:crypto";
 
-// source: https://docs.sms-gate.app/privacy/encryption/
+// algorithm specification
+const ALGORITHM = "aes-256-cbc";
+const KEY_ALGORITHM = "pbkdf2";
+const MAC_ALGORITHM = "sha1";
+const KEY_LENGTH = 32;
+const algorithmSpec = `${ALGORITHM}/${KEY_ALGORITHM}-${MAC_ALGORITHM}`;
+
 export class Encryptor {
   constructor(
     protected readonly passphrase: string,
     protected readonly iterations: number = 75_000
   ) {}
 
-  public Decrypt(input: string): string {
-    const parts = input.split("$");
+  public decrypt(input: string): string {
+    const [_, algo, paramsStr, saltStr, encrypted] = input.split("$");
 
-    if (parts.length !== 5) {
-      throw new Error("Invalid encrypted text");
-    }
+    if (algo !== algorithmSpec) throw new Error("Unsupported algorithm");
 
-    if (parts[1] !== "aes-256-cbc/pbkdf2-sha1") {
-      throw new Error("Unsupported algorithm");
-    }
+    const params = Object.fromEntries(
+      paramsStr.split(",").map((_) => _.split("="))
+    );
 
-    const paramsStr = parts[2];
-
-    const params = this.parseParams(paramsStr);
-
-    if (!params.has("i")) {
-      throw new Error("Missing iteration count");
-    }
-
-    const iterations = parseInt(params.get("i")!);
-
-    const salt = Buffer.from(parts[3], "base64");
-
-    const encryptedText = Buffer.from(parts[4], "base64");
-
-    const secretKey = this.generateSecretKeyFromPassphrase(
+    const saltBuff = Buffer.from(saltStr, "base64");
+    const encryptedBuff = Buffer.from(encrypted, "base64");
+    const key = crypto.pbkdf2Sync(
       this.passphrase,
-      salt,
-      32,
-      iterations
+      saltBuff,
+      parseInt(params["i"]),
+      KEY_LENGTH,
+      MAC_ALGORITHM
     );
+    const decipher = crypto.createDecipheriv(ALGORITHM, key, saltBuff);
+    const decryptedBuff = Buffer.concat([
+      decipher.update(encryptedBuff),
+      decipher.final(),
+    ]);
 
-    const decryptedText = this.decryptString(encryptedText, secretKey, salt);
-
-    return decryptedText.toString("utf8");
+    return decryptedBuff.toString("utf8");
   }
 
-  protected parseParams(params: string): Map<string, string> {
-    const keyValuePairs = params.split(",");
-
-    const result = new Map<string, string>();
-
-    keyValuePairs.forEach((pair) => {
-      const [key, value] = pair.split("=");
-
-      result.set(key, value);
-    });
-
-    return result;
-  }
-
-  protected decryptString(
-    input: Buffer,
-    secretKey: Buffer,
-    iv: Buffer
-  ): Buffer {
-    const decipher = crypto.createDecipheriv("aes-256-cbc", secretKey, iv);
-
-    return Buffer.concat([decipher.update(input), decipher.final()]);
-  }
-
-  public Encrypt(input: string): string {
-    const salt = this.generateSalt();
-
-    const secretKey = this.generateSecretKeyFromPassphrase(
+  public encrypt(input: string): string {
+    const saltBuff = crypto.randomBytes(16);
+    const key = crypto.pbkdf2Sync(
       this.passphrase,
-      salt,
-      32,
-      this.iterations
+      saltBuff,
+      this.iterations,
+      KEY_LENGTH,
+      MAC_ALGORITHM
     );
+    const cipher = crypto.createCipheriv(ALGORITHM, key, saltBuff);
+    const cipherBuff = Buffer.concat([
+      cipher.update(Buffer.from(input)),
+      cipher.final(),
+    ]);
 
-    const encryptedText = this.encryptString(
-      Buffer.from(input, "utf8"),
-      secretKey,
-      salt
-    );
-
-    return `$aes-256-cbc/pbkdf2-sha1$i=${this.iterations}$${salt.toString(
-      "base64"
-    )}$${encryptedText.toString("base64")}`;
-  }
-
-  protected encryptString(
-    input: Buffer,
-    secretKey: Buffer,
-    iv: Buffer
-  ): Buffer {
-    const cypher = crypto.createCipheriv("aes-256-cbc", secretKey, iv);
-
-    return Buffer.concat([cypher.update(input), cypher.final()]);
-  }
-
-  protected generateSalt(size: number = 16): Buffer {
-    return crypto.randomBytes(size);
-  }
-
-  protected generateSecretKeyFromPassphrase(
-    passphrase: string,
-    salt: Buffer,
-    keyLength: number = 32,
-    iterations: number = 75_000
-  ): Buffer {
-    return crypto.pbkdf2Sync(passphrase, salt, iterations, keyLength, "sha1");
+    return [
+      "",
+      algorithmSpec,
+      "i=" + this.iterations,
+      saltBuff.toString("base64"),
+      cipherBuff.toString("base64"),
+    ].join("$");
   }
 }

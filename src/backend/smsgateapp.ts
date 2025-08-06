@@ -124,8 +124,8 @@ export class SmsGateApp implements TrackersBackend {
     try {
       const body: SmsMessage = {
         id: "",
-        message: this._crypt.Encrypt(process.env.API_MESSAGE || ""),
-        phoneNumbers: [this._crypt.Encrypt(tracker.properties?.number)],
+        message: this._crypt.encrypt(process.env.API_MESSAGE || ""),
+        phoneNumbers: [this._crypt.encrypt(tracker.properties?.number)],
         isEncrypted: true,
       };
 
@@ -159,12 +159,12 @@ export class SmsGateApp implements TrackersBackend {
 
       // decrypt
       try {
-        data.payload.phoneNumber = this._crypt.Decrypt(
+        data.payload.phoneNumber = this._crypt.decrypt(
           data.payload.phoneNumber
         );
       } catch {}
       try {
-        data.payload.message = this._crypt.Decrypt(data.payload.message);
+        data.payload.message = this._crypt.decrypt(data.payload.message);
       } catch {}
 
       // find tracker

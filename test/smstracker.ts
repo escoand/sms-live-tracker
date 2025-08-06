@@ -1,6 +1,6 @@
-import { Feature, Point } from "geojson";
+import { Feature, Point } from "npm:geojson";
 import { suite, test } from "node:test";
-import { SmsTrackerParser } from "../src/parser/smstracker";
+import { SmsTrackerParser } from "../src/parser/smstracker.ts";
 
 suite("sms tracker parser", () => {
   test("correct message", (fn) => {

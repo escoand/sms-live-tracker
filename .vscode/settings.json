@@ -3,7 +3,8 @@
     "./main.ts",
     "./src/backend",
     "./src/parser",
-    "./src/store.ts"
+    "./src/store.ts",
+    "./test/"
   ],
   "editor.inlayHints.enabled": "off"
 }
