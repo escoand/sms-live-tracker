@@ -1,4 +1,10 @@
-import { Feature, FeatureCollection, LineString, Point } from "geojson";
+import {
+  Feature,
+  FeatureCollection,
+  LineString,
+  Point,
+  Position,
+} from "geojson";
 import {
   FilterSpecification,
   GeoJSONSource,
@@ -43,58 +49,17 @@ export class IntervalControl implements IControl {
   }
 
   private _updateRoutes(evt?: MapSourceDataEvent) {
-    if (evt && evt.sourceDataType != "content") return;
+    if (evt && evt.sourceDataType !== "content") return;
 
     this._source.getData().then((data: FeatureCollection) => {
-      const distances: Feature<Point>[] = [];
-
-      data.features
+      const intervals = data.features
         .filter((feature) => feature.geometry.type === "LineString")
-        .forEach((feature: Feature<LineString>) => {
-          feature.geometry.coordinates.reduce(
-            (acc, cur, idx) => {
-              if (idx === 0) return acc;
-              const pos = new LngLat(cur[0], cur[1]);
-              const dist = acc.pos.distanceTo(pos);
-              const length = acc.length + dist;
-              for (
-                let offset =
-                  acc.length - (acc.length % INTERVAL_IN_M) + INTERVAL_IN_M;
-                offset <= length;
-                offset += INTERVAL_IN_M
-              ) {
-                const name = (length - (length % INTERVAL_IN_M)) / 1000;
-                const ratio = (offset - acc.length) / dist;
-                const coordinates = [
-                  acc.pos.lng + (pos.lng - acc.pos.lng) * ratio,
-                  acc.pos.lat + (pos.lat - acc.pos.lat) * ratio,
-                ];
-                distances.push({
-                  type: "Feature",
-                  geometry: { type: "Point", coordinates },
-                  properties: {
-                    name,
-                    color: feature.properties.color,
-                    group: feature.properties.name,
-                  },
-                });
-              }
-              return { pos, length };
-            },
-            {
-              pos: new LngLat(
-                feature.geometry.coordinates[0][0],
-                feature.geometry.coordinates[0][1]
-              ),
-              length: 0,
-            }
-          );
-        });
+        .flatMap(this._createIntervals);
 
       this._source.map
         .addSource(this._id, {
           type: "geojson",
-          data: { type: "FeatureCollection", features: distances },
+          data: { type: "FeatureCollection", features: intervals },
         })
         .addLayer(
           {
@@ -128,5 +93,50 @@ export class IntervalControl implements IControl {
           this._belowText
         );
     });
+  }
+
+  private _createIntervals(feature: Feature<LineString>) {
+    let position: LngLat;
+    let length = 0;
+    const intervals: Feature<Point>[] = [];
+
+    // iterate through each coordinate pair to create route segments
+    feature.geometry.coordinates.forEach((cur, idx) => {
+      const newPosition = new LngLat(cur[0], cur[1]);
+      if (idx === 0) {
+        position = newPosition;
+        return;
+      }
+      const distance = position.distanceTo(newPosition);
+      const newLength = length + distance;
+
+      // create interval markers at specified intervals
+      for (
+        let offset = length - (length % INTERVAL_IN_M) + INTERVAL_IN_M;
+        offset <= newLength;
+        offset += INTERVAL_IN_M
+      ) {
+        const name = (newLength - (newLength % INTERVAL_IN_M)) / 1000;
+        const ratio = (offset - length) / distance;
+        const coordinates = [
+          position.lng + (newPosition.lng - position.lng) * ratio,
+          position.lat + (newPosition.lat - position.lat) * ratio,
+        ];
+        intervals.push({
+          type: "Feature",
+          geometry: { type: "Point", coordinates },
+          properties: {
+            name,
+            color: feature.properties.color,
+            group: feature.properties.name,
+          },
+        });
+      }
+
+      position = newPosition;
+      length = newLength;
+    });
+
+    return intervals;
   }
 }
