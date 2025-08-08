@@ -1,10 +1,4 @@
-import {
-  Feature,
-  FeatureCollection,
-  LineString,
-  Point,
-  Position,
-} from "geojson";
+import { Feature, FeatureCollection, LineString, Point } from "geojson";
 import {
   FilterSpecification,
   GeoJSONSource,
