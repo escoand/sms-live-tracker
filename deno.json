@@ -2,7 +2,6 @@
   "imports": {
     "@maptiler/sdk": "npm:@maptiler/sdk",
     "@mdi/js": "npm:@mdi/js",
-    "@turf/turf": "npm:@turf/turf",
     "@types/geojson": "npm:@types/geojson",
     "@watergis/maplibre-gl-export": "npm:@watergis/maplibre-gl-export",
     "browserslist-to-esbuild": "npm:browserslist-to-esbuild",

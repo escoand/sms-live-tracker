@@ -1,13 +1,15 @@
-import { along, length } from "@turf/turf";
 import { Feature, FeatureCollection, LineString, Point } from "geojson";
 import {
   FilterSpecification,
   GeoJSONSource,
   IControl,
+  LngLat,
   Map,
   MapSourceDataEvent,
 } from "maplibre-gl";
 import { blackWhiteForeground } from "../const";
+
+const INTERVAL_IN_M = 1_000;
 
 export class IntervalControl implements IControl {
   private _id: string;
@@ -49,19 +51,44 @@ export class IntervalControl implements IControl {
       data.features
         .filter((feature) => feature.geometry.type === "LineString")
         .forEach((feature: Feature<LineString>) => {
-          const len = length(feature);
-          for (let i = 1; i < len; i++) {
-            if (feature.properties.color)
-              distances.push(
-                Object.assign(along(feature, i), {
+          feature.geometry.coordinates.reduce(
+            (acc, cur, idx) => {
+              if (idx === 0) return acc;
+              const pos = new LngLat(cur[0], cur[1]);
+              const dist = acc.pos.distanceTo(pos);
+              const length = acc.length + dist;
+              for (
+                let offset =
+                  acc.length - (acc.length % INTERVAL_IN_M) + INTERVAL_IN_M;
+                offset <= length;
+                offset += INTERVAL_IN_M
+              ) {
+                const name = (length - (length % INTERVAL_IN_M)) / 1000;
+                const ratio = (offset - acc.length) / dist;
+                const coordinates = [
+                  acc.pos.lng + (pos.lng - acc.pos.lng) * ratio,
+                  acc.pos.lat + (pos.lat - acc.pos.lat) * ratio,
+                ];
+                distances.push({
+                  type: "Feature",
+                  geometry: { type: "Point", coordinates },
                   properties: {
-                    name: i,
+                    name,
                     color: feature.properties.color,
                     group: feature.properties.name,
                   },
-                })
-              );
-          }
+                });
+              }
+              return { pos, length };
+            },
+            {
+              pos: new LngLat(
+                feature.geometry.coordinates[0][0],
+                feature.geometry.coordinates[0][1]
+              ),
+              length: 0,
+            }
+          );
         });
 
       this._source.map
