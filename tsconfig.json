@@ -3,6 +3,7 @@
     "allowSyntheticDefaultImports": true,
     "lib": ["DOM", "ES2019"],
     "outDir": "www",
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "target": "ES2019"
   }
 }

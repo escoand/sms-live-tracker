@@ -10,7 +10,7 @@
     "maplibre-gl": "npm:maplibre-gl"
   },
   "tasks": {
-    "build": "deno --allow-env --allow-read --allow-run --allow-write=www build.js",
+    "build": "deno run --allow-env --allow-read --allow-run --allow-write=www npm:esbuild --bundle --minify --outfile=www/index.js --sourcemap src/map.ts",
     "start": "deno serve --allow-env --allow-net --allow-read=data,www --allow-write=data/trackers.json main.ts",
     "dev": "deno task dev:server & deno task dev:client",
     "dev:client": "deno run --allow-env --allow-read --allow-run --allow-write=www npm:esbuild --bundle --outfile=www/index.js --sourcemap --watch src/map.ts",
