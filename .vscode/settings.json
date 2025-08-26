@@ -6,5 +6,6 @@
     "./src/store.ts",
     "./test/"
   ],
-  "editor.inlayHints.enabled": "off"
+  "editor.inlayHints.enabled": "off",
+  "deno.enable": true
 }

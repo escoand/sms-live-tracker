@@ -1,20 +1,19 @@
 {
-  "imports": {
-    "@maptiler/sdk": "npm:@maptiler/sdk",
-    "@mdi/js": "npm:@mdi/js",
-    "@types/geojson": "npm:@types/geojson",
-    "@watergis/maplibre-gl-export": "npm:@watergis/maplibre-gl-export",
-    "browserslist-to-esbuild": "npm:browserslist-to-esbuild",
-    "esbuild": "npm:esbuild",
-    "hono": "npm:hono",
-    "maplibre-gl": "npm:maplibre-gl"
+  "dependencies": {
+    "@maptiler/sdk": "^3.7.0",
+    "@mdi/js": "^7.4.47",
+    "@types/geojson": "^7946.0.16",
+    "@watergis/maplibre-gl-export": "^4.0.1",
+    "browserslist-to-esbuild": "^2.1.1",
+    "esbuild": "^0.25.9",
+    "hono": "^4.9.4",
+    "maplibre-gl": "^5.7.0"
   },
-  "tasks": {
+  "scripts": {
     "build": "deno run --allow-env --allow-read --allow-run --allow-write=www npm:esbuild --bundle --minify --outfile=www/index.js --sourcemap src/map.ts",
     "start": "deno serve --allow-env --allow-net --allow-read=data,www --allow-write=data/trackers.json main.ts",
     "dev": "deno task dev:server & deno task dev:client",
     "dev:client": "deno run --allow-env --allow-read --allow-run --allow-write=www npm:esbuild --bundle --outfile=www/index.js --sourcemap --watch src/map.ts",
     "dev:server": "deno serve --allow-env --allow-net --allow-read=data,www --allow-write=data/trackers.json --env-file --watch main.ts"
-  },
-  "nodeModulesDir": "auto"
+  }
 }
