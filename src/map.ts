@@ -99,7 +99,7 @@ class LiveTrackerMap {
     map.addControl(new NavigationControl(), "bottom-right");
     map.addControl(zoomControl, "bottom-right");
     map.addControl(new RoutesControl(routes), "top-right");
-    map.addControl(new TrackersControl(positions), "top-left");
+    map.addControl(new TrackersControl(positions, routes), "top-left");
     map.addControl(new ExportControl());
 
     // add events
