@@ -2,6 +2,7 @@ import process from "node:process";
 import { Encryptor } from "../../crypt.ts";
 import { TrackersBackend, TrackersStore } from "../../types.d.ts";
 import {
+  HealthCheck,
   Message,
   SmsDeliveredPayload,
   SmsFailedPayload,
@@ -75,23 +76,23 @@ export class SmsGateApp implements TrackersBackend {
 
       // decrypt
       try {
-        // @ts-expect-error: undefined
+        // @ts-expect-error: payload may be undefined
         event.payload.phoneNumber = this._crypt.decrypt(
-          // @ts-expect-error: undefined
+          // @ts-expect-error: payload may be undefined
           event.payload.phoneNumber
         );
       } catch {
         // ignore
       }
       try {
-        // @ts-expect-error: undefined
+        // @ts-expect-error: payload may be undefined
         event.payload.message = this._crypt.decrypt(event.payload.message);
       } catch {
         // ignore
       }
 
       // find tracker
-      // @ts-expect-error: undefined
+      // @ts-expect-error: payload may be undefined
       const tracker = this._store.getTracker(event.payload?.phoneNumber);
 
       // sms sent
@@ -173,7 +174,20 @@ export class SmsGateApp implements TrackersBackend {
       // system ping
       else if (event.event == "system:ping") {
         const payload = event.payload as SystemPingPayload;
-        console.info("system ping:", payload);
+        // @ts-expect-error: health check is optional
+        const health = payload.health as HealthCheck;
+        if (health) {
+          Object.values(health.checks || {}).forEach((check) => {
+            console.info(
+              check.description,
+              check.observedValue,
+              "(" + check.observedUnit + "):",
+              check.status
+            );
+          });
+        } else {
+          console.info("system ping:", payload);
+        }
       }
 
       // other event
