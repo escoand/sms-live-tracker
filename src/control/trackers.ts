@@ -58,7 +58,8 @@ export class TrackersControl extends SvgIconControl {
       .appendChild(document.createElement("style"))
       .append(
         ".trackers td { text-align: right; vertical-align: top; }",
-        ".trackers .requested { color: grey; font-size: x-small; }"
+        ".trackers .requested { color: grey; font-size: x-small; }",
+        ".trackers .fail { color: orangered; }"
       );
     this._table = this._container.appendChild(document.createElement("table"));
     this._trackers = this._table.appendChild(document.createElement("tbody"));
@@ -81,8 +82,8 @@ export class TrackersControl extends SvgIconControl {
     close.innerHTML = "❌&#xFE0E;";
     close.style.color = iconColor;
 
-    this._button.addEventListener("click", () => this.toggle());
-    head.addEventListener("click", () => this.toggle());
+    this._button.addEventListener("click", this.toggle.bind(this));
+    head.addEventListener("click", this.toggle.bind(this));
 
     return this._container;
   }
@@ -134,67 +135,79 @@ export class TrackersControl extends SvgIconControl {
         this._findNextPoiOnRoute(routes, trackers);
         trackers.features
           .filter((feature) => feature.geometry.type === "Point")
-          .forEach(this._addTrackerToUi.bind(this));
+          .forEach(this._updateTrackerInUi.bind(this));
       }
     );
   }
 
-  private _addTrackerToUi(tracker: Feature<Point>) {
+  private _updateTrackerInUi(tracker: Feature<Point>) {
     const prefix = "data-" + tracker.properties?.name;
 
     // create tracker entry
     if (!document.getElementById(prefix)) {
-      const row = document.createElement("tr");
-      row.setAttribute("id", prefix);
-      row
-        .appendChild(document.createElement("td"))
-        .append(tracker.properties?.name);
-      row
-        .appendChild(document.createElement("td"))
-        .setAttribute("id", prefix + "-battery");
-      const cell = row.appendChild(document.createElement("td"));
-      cell
-        .appendChild(document.createElement("div"))
-        .setAttribute("id", prefix + "-received");
-      const requested = cell.appendChild(document.createElement("div"));
-      requested.setAttribute("id", prefix + "-requested");
-      requested.className = "requested";
-      const btn = row
-        .appendChild(document.createElement("td"))
-        .appendChild(document.createElement("button"));
-      btn.append("🔃");
-      btn.addEventListener("click", () =>
-        this.requestPosition(tracker.properties?.name)
-      );
-      this._trackers.appendChild(row);
+      const row = document.createElement("tbody");
+      row.innerHTML = `
+        <tr id="${prefix}">
+            <td>${tracker.properties?.name}</td>
+            <td><span id="${prefix}-battery"></span></td>
+            <td>
+                <div id="${prefix}-received"></div>
+                <div id="${prefix}-requested" class="requested"></div>
+            </td>
+            <td>
+                <button id="${prefix}-button">⭮</button>
+            </td>
+        </tr>
+    `;
+      this._trackers.appendChild(row.firstElementChild);
+      document
+        .getElementById(`${prefix}-button`)
+        ?.addEventListener(
+          "click",
+          this.requestPosition.bind(this, tracker.properties?.name)
+        );
     }
 
     // update tracker entry
-    document.getElementById(prefix).style.color = !tracker.geometry.coordinates
-      .length
-      ? "orangered"
-      : "";
+    if (!tracker.geometry.coordinates.length) {
+      document.getElementById(prefix).classList.add("fail");
+    } else {
+      document.getElementById(prefix).classList.remove("fail");
+    }
     document.getElementById(prefix + "-battery").innerHTML =
       tracker.properties?.battery || "";
 
     const received = document.getElementById(prefix + "-received");
-    received.innerHTML = "";
     if (tracker.geometry.coordinates.length && tracker.properties?.received) {
       const date = new Date(tracker.properties.received).getTime();
-      received.append(timeDiff(date));
+      received.innerHTML = timeDiff(date);
+    } else {
+      received.innerHTML = "";
     }
 
     const requested = document.getElementById(prefix + "-requested");
-    requested.innerHTML = "";
-    ["failed", "delivered", "sent", "requested"].some((state) => {
+    if (tracker.properties.nextPoi) {
+      requested.innerHTML = tracker.properties.nextPoi;
+    } else {
+      requested.innerHTML = "";
+    }
+
+    const button = document.getElementById(prefix + "-button");
+    const inProgress = [
+      ["failed", "⊗"],
+      ["delivered", "◕"],
+      ["sent", "◑"],
+      ["requested", "◔"],
+    ].some(([state, icon]) => {
       if (!tracker.properties?.[state]) return false;
       const date = new Date(tracker.properties?.[state]).getTime();
-      requested.append(getText(state), ": ", timeDiff(date));
+      button.innerHTML = icon;
+      button.title = `${getText(state)}: ${timeDiff(date)}`;
       return true;
     });
-
-    if (tracker.properties?.nextPoi) {
-      requested.append(tracker.properties.nextPoi);
+    if (!inProgress) {
+      button.innerHTML = "⭮";
+      button.title = "";
     }
   }
 
@@ -224,18 +237,15 @@ export class TrackersControl extends SvgIconControl {
       .concat(trackers.features.filter(filterTracker))
 
       // add LngLat to POIs and trackers
-      .map((point: Feature<Point>) => ({
-        ...point,
-        properties: {
-          ...point.properties,
-          _lngLat: new LngLat(
-            point.geometry.coordinates[0],
-            point.geometry.coordinates[1]
-          ),
-          _closestRouteDist: Infinity,
-          _closestRouteIdx: -1,
-        },
-      }))
+      .map((point: Feature<Point>) => {
+        point.properties._lngLat = new LngLat(
+          point.geometry.coordinates[0],
+          point.geometry.coordinates[1]
+        );
+        point.properties._closestRouteDist = Infinity;
+        point.properties._closestRouteIdx = -1;
+        return point;
+      })
 
       // find closest route point for each POI and tracker
       .forEach((point) => {

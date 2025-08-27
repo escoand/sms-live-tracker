@@ -144,6 +144,10 @@ export class SmsGateApp implements TrackersBackend {
             )
           );
         }
+        delete tracker.properties.failed;
+        tracker.properties.requested = new Date().toISOString();
+        delete tracker.properties.sent;
+        delete tracker.properties.delivered;
         this._store.syncTrackers();
       });
     } catch (err) {
