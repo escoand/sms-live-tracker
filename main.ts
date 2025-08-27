@@ -3,7 +3,7 @@ import { serveStatic } from "npm:hono/deno";
 import { etag } from "npm:hono/etag";
 import { HTTPException } from "npm:hono/http-exception";
 import { logger } from "npm:hono/logger";
-import { SmsGateApp } from "./src/backend/smsgateapp.ts";
+import { SmsGateApp } from "./src/backend/smsgateapp/smsgateapp.ts";
 import { TrackerStore } from "./src/store.ts";
 
 const dataDir = "data";
