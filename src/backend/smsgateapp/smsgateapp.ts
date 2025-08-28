@@ -23,7 +23,7 @@ export class SmsGateApp implements TrackersBackend {
     this._crypt = new Encryptor(process.env.API_ENCRYPTION || "");
   }
 
-  request(trackerName: string): Promise<any> {
+  request(trackerName: string): Promise<void> {
     const tracker = this._store.getTracker(trackerName);
 
     if (!tracker) {
@@ -59,6 +59,7 @@ export class SmsGateApp implements TrackersBackend {
             )
           );
         }
+        if (!tracker.properties) tracker.properties = {};
         delete tracker.properties.failed;
         tracker.properties.requested = new Date().toISOString();
         delete tracker.properties.sent;
@@ -70,7 +71,7 @@ export class SmsGateApp implements TrackersBackend {
     }
   }
 
-  receive(message: string): Promise<any> {
+  receive(message: string): Promise<void> {
     try {
       const event = JSON.parse(message) as WebHookEvent;
 

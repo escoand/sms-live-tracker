@@ -11,8 +11,8 @@ export interface TrackersStore {
 }
 
 export interface TrackersBackend {
-  request(trackerName: string): Promise<any>;
-  receive(payload: string): Promise<any>;
+  request(trackerName: string): Promise<void>;
+  receive(payload: string): Promise<void>;
 }
 
 export interface TrackersParser {

@@ -41,6 +41,6 @@ suite("encryptor", () => {
     const encryptedText = encryptor1.encrypt(plaintext);
     fn.assert.throws(() => {
       encryptor2.decrypt(encryptedText);
-    }, /Cannot unpad the input data/);
+    }, /TypeError: bad decrypt/);
   });
 });

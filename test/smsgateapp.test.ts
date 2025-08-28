@@ -1,7 +1,12 @@
+import process from "node:process";
 import { suite, test } from "node:test";
 import { Feature, Point } from "npm:geojson";
-import { SmsGateApp } from "../src/backend/smsgateapp.ts";
+import { SmsGateApp } from "../src/backend/smsgateapp/smsgateapp.ts";
 import { TrackersStore } from "../src/types.d.ts";
+
+process.env.API_AUTHENTICATION = "test";
+process.env.API_ENCRYPTION = "test";
+process.env.API_MESSAGE = "test";
 
 const tracker: Feature<Point> = {
   type: "Feature",
@@ -17,10 +22,10 @@ const tracker: Feature<Point> = {
 };
 
 const mockApi = (tracker: Feature<Point>): TrackersStore => ({
-  getTracker(trackerNameOrNumber: string): Feature<Point> | undefined {
+  getTracker(_trackerNameOrNumber: string): Feature<Point> | undefined {
     return tracker;
   },
-  parseMessage(message: string, tracker: Feature<Point>): void {
+  parseMessage(_message: string, _tracker: Feature<Point>): void {
     // ignore
   },
   syncTrackers() {
@@ -38,13 +43,16 @@ const testData = (event: string, dateAttribute: string) =>
     },
   });
 
-suite("sms-gate.app backend", async () => {
-  test("request", async (fn) => {});
+suite("sms-gate.app backend", (fn) => {
+  test("request", (fn) => {});
 
   test("sent event", async (fn) => {
     const data = JSON.parse(JSON.stringify(tracker));
     const api = new SmsGateApp(mockApi(data));
-    api.receive(testData("sms:sent", "sentAt"));
+
+    await fn.assert.doesNotReject(() =>
+      api.receive(testData("sms:sent", "sentAt"))
+    );
     fn.assert.deepEqual(data.properties, {
       name: "name-DUMMY",
       sent: "2025-01-01T01:02:03.000Z",
@@ -55,7 +63,10 @@ suite("sms-gate.app backend", async () => {
   test("deliver event", async (fn) => {
     const data = JSON.parse(JSON.stringify(tracker));
     const api = new SmsGateApp(mockApi(data));
-    api.receive(testData("sms:delivered", "deliveredAt"));
+
+    await fn.assert.doesNotReject(() =>
+      api.receive(testData("sms:delivered", "deliveredAt"))
+    );
     fn.assert.deepEqual(data.properties, {
       name: "name-DUMMY",
       delivered: "2025-01-01T01:02:03.000Z",
@@ -66,7 +77,10 @@ suite("sms-gate.app backend", async () => {
   test("receive event", async (fn) => {
     const data = JSON.parse(JSON.stringify(tracker));
     const api = new SmsGateApp(mockApi(data));
-    api.receive(testData("sms:received", "receivedAt"));
+
+    await fn.assert.doesNotReject(() =>
+      api.receive(testData("sms:received", "receivedAt"))
+    );
     fn.assert.deepEqual(data.properties, {
       name: "name-DUMMY",
       received: "2025-01-01T01:02:03.000Z",
@@ -76,7 +90,9 @@ suite("sms-gate.app backend", async () => {
   test("fail event", async (fn) => {
     const data = JSON.parse(JSON.stringify(tracker));
     const api = new SmsGateApp(mockApi(data));
-    api.receive(testData("sms:failed", "failedAt"));
+    await fn.assert.doesNotReject(() =>
+      api.receive(testData("sms:failed", "failedAt"))
+    );
     fn.assert.deepEqual(data.properties, {
       name: "name-DUMMY",
       failed: "2025-01-01T01:02:03.000Z",
@@ -87,20 +103,28 @@ suite("sms-gate.app backend", async () => {
   test("unknown tracker", async (fn) => {
     // @ts-ignore skip type check for null
     const api = new SmsGateApp(mockApi(null));
-    api.receive(testData("sms:received", "wrongDateAttribute"));
+    await fn.assert.doesNotReject(() =>
+      api.receive(testData("sms:received", "wrongDateAttribute"))
+    );
   });
 
   test("wrong date", async (fn) => {
     const data = JSON.parse(JSON.stringify(tracker));
     const api = new SmsGateApp(mockApi(data));
-    const result = api.receive(testData("sms:received", "wrongDateAttribute"));
-    fn.assert.rejects(result);
+    await fn.assert.doesNotReject(() =>
+      api.receive(testData("sms:received", "wrongDateAttribute"))
+    );
+    fn.assert.deepEqual(data.properties, {
+      name: "name-DUMMY",
+      received: "received-DUMMMY",
+    });
   });
 
   test("unexpected event", async (fn) => {
     const data = JSON.parse(JSON.stringify(tracker));
     const api = new SmsGateApp(mockApi(data));
-    const result = api.receive(testData("something", "wrongDateAttribute"));
-    fn.assert.rejects(result);
+    await fn.assert.rejects(() =>
+      api.receive(testData("something", "wrongDateAttribute"))
+    );
   });
 });

@@ -19,7 +19,7 @@ app.use(logger());
 app.post("/api/request", async (c) => {
   return await c.req
     .text()
-    .then((text) => backend.request(text))
+    .then(backend.request.bind(this))
     .then(() => c.text("OK"))
     .catch((err) => {
       const realErr = err.cause || err;
@@ -31,7 +31,7 @@ app.post("/api/request", async (c) => {
 app.post("/api/receive", async (c) => {
   return await c.req
     .text()
-    .then((text) => backend.receive(text))
+    .then(backend.request.bind(this))
     .then(() => c.text("OK"))
     .catch((err) => {
       const realErr = err.cause || err;
