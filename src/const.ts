@@ -1,3 +1,4 @@
+import { Feature, FeatureCollection, LineString, Point } from "geojson";
 import {
   AddLayerObject,
   ExpressionSpecification,
@@ -128,3 +129,28 @@ export const layers: AddLayerObject[] = [
     },
   },
 ];
+
+export const asFeatureCollection = (
+  data: GeoJSON.GeoJSON
+): FeatureCollection => {
+  switch (data.type) {
+    case "FeatureCollection":
+      return data;
+    case "Feature":
+      return { features: [data], type: "FeatureCollection" };
+    default:
+      return {
+        features: [{ type: "Feature", geometry: data, properties: {} }],
+        type: "FeatureCollection",
+      };
+  }
+};
+
+export const filterLineString = (
+  feature: Feature
+): feature is Feature<LineString> =>
+  feature.geometry.type === "LineString" &&
+  feature.geometry.coordinates.length > 0;
+
+export const filterPoint = (feature: Feature): feature is Feature<Point> =>
+  feature.geometry.type === "Point" && feature.geometry.coordinates.length > 0;

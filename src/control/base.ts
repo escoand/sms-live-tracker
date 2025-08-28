@@ -20,14 +20,14 @@ export abstract class SvgIconControl implements IControl {
     const icon = this._button.appendChild(document.createElement("span"));
     icon.className = "maplibregl-ctrl-icon";
     icon.style.transform = iconTransform;
-    icon.style.backgroundImage = SvgIconControl.createSvg(svgIconPath);
+    icon.style.backgroundImage =
+      'url("' + SvgIconControl.createSvg(svgIconPath) + '")';
   }
 
-  abstract onAdd(map: Map);
+  abstract onAdd(map: Map): HTMLElement;
 
   onRemove() {
-    this._source = undefined;
-    this._container.parentNode.removeChild(this._container);
+    this._container.parentNode?.removeChild(this._container);
   }
 
   static createSvg(svgIconPath: string) {
@@ -39,8 +39,10 @@ export abstract class SvgIconControl implements IControl {
       .appendChild(document.createElementNS(svgNamespace, "path"))
       .setAttribute("d", svgIconPath);
 
-    return (
-      'url("data:image/svg+xml,' + encodeURIComponent(svg.outerHTML) + '")'
-    );
+    return "data:image/svg+xml," + encodeURIComponent(svg.outerHTML);
+  }
+
+  static isFeatureCollection(data: GeoJSON.GeoJSON) {
+    return data && data.type === "FeatureCollection";
   }
 }

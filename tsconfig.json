@@ -1,9 +1,12 @@
 {
   "compilerOptions": {
     "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
     "lib": ["DOM", "ES2019"],
+    "moduleResolution": "node",
     "outDir": "www",
     "skipLibCheck": true,
+    "strict": true,
     "target": "ES2019"
   }
 }

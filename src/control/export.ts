@@ -36,24 +36,25 @@ export class ExportControl extends MaplibreExportControl {
 
     const result = super.onAdd(map);
     this.exportButton.style.backgroundImage =
-      SvgIconControl.createSvg(mdiPrinter);
+      'url("' + SvgIconControl.createSvg(mdiPrinter) + '")';
     this.exportContainer.style.margin = "5px";
 
     const list = result.querySelector("#mapbox-gl-export-page-size");
     Object.entries(moreSizes).forEach(([name, bounds]) => {
-      const opt = list.appendChild(document.createElement("option"));
+      const opt = list?.appendChild(document.createElement("option"));
+      if (!opt) return;
       opt.setAttribute("name", "page-size");
       opt.text = name;
       opt.value = JSON.stringify(bounds);
     });
-    Array.from(list.childNodes)
-      .sort((a, b) => a.textContent.localeCompare(b.textContent))
-      .forEach((child) => list.appendChild(child));
+    Array.from(list?.childNodes || [])
+      .sort((a, b) => a.textContent?.localeCompare(b.textContent || "") || 0)
+      .forEach((child) => list?.appendChild(child));
 
     return result;
   }
 
-  private _togglePrintableArea(state) {
+  private _togglePrintableArea(state: boolean) {
     this.map.setLayoutProperty(
       routeTexts,
       "text-overlap",

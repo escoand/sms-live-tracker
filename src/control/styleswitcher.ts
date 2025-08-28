@@ -3,11 +3,12 @@ import { LineLayerSpecification, Map } from "maplibre-gl/dist/maplibre-gl";
 import { SvgIconControl } from "./base";
 
 export class StyleSwitcherControl extends SvgIconControl {
-  private _styles = [];
-  private _keepSources = [];
+  private _styles: string[];
+  private _keepSources: string[];
   private _last = 0;
 
   constructor(styles: string[], keepSources: string[] = []) {
+    // @ts-expect-error: undefined not allowed
     super(mdiLayers, undefined);
     this._styles = styles;
     this._keepSources = keepSources;
@@ -20,14 +21,13 @@ export class StyleSwitcherControl extends SvgIconControl {
       // set style and copy data
       map.setStyle(this._styles[this._last], {
         transformStyle: (prev, next) => {
-          this._keepSources.forEach((_) => {
-            next.sources[_] = prev.sources[_];
+          this._keepSources.forEach((key) => {
+            if (!prev?.sources[key]) return;
+            next.sources[key] = prev?.sources[key];
+            prev.layers
+              .filter((_) => _.type !== "background" && _.source === key)
+              .forEach((_) => next.layers.push(_));
           });
-          prev.layers
-            .filter((_: LineLayerSpecification) =>
-              this._keepSources.includes(_.source)
-            )
-            .forEach((_) => next.layers.push(_));
           return next;
         },
       });

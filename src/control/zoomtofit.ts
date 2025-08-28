@@ -1,12 +1,6 @@
 import { mdiFitToPageOutline } from "@mdi/js";
-import { FeatureCollection } from "geojson";
-import {
-  GeoJSONSource,
-  LngLatBounds,
-  LngLatBoundsLike,
-  LngLatLike,
-  Map,
-} from "maplibre-gl";
+import { GeoJSONSource, LngLatBounds, LngLatLike, Map } from "maplibre-gl";
+import { asFeatureCollection } from "../const";
 import { SvgIconControl } from "./base";
 
 export class ZoomToFitControl extends SvgIconControl {
@@ -21,15 +15,15 @@ export class ZoomToFitControl extends SvgIconControl {
   }
 
   zoomToFit() {
-    this._source.getData().then((data: FeatureCollection) => {
-      const bounds: LngLatBoundsLike = data.features
-        .flatMap((feature) =>
-          feature.geometry?.type == "LineString"
-            ? feature.geometry?.coordinates
-            : feature.geometry?.type == "MultiLineString"
-            ? feature.geometry?.coordinates.flat()
-            : feature.geometry?.type == "Point"
-            ? [feature.geometry?.coordinates]
+    this._source.getData().then((data) => {
+      const bounds = asFeatureCollection(data)
+        .features.flatMap((feature) =>
+          feature.geometry.type == "LineString"
+            ? feature.geometry.coordinates
+            : feature.geometry.type == "MultiLineString"
+            ? feature.geometry.coordinates.flat()
+            : feature.geometry.type == "Point"
+            ? [feature.geometry.coordinates]
             : []
         )
         .reduce(
@@ -39,7 +33,7 @@ export class ZoomToFitControl extends SvgIconControl {
             [Number.MIN_VALUE, -90],
           ])
         );
-      this._source.map.fitBounds(bounds, { padding: 50 });
+      if (bounds) this._source.map.fitBounds(bounds, { padding: 50 });
     });
   }
 }

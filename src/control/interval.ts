@@ -1,4 +1,4 @@
-import { Feature, FeatureCollection, LineString, Point } from "geojson";
+import { Feature, LineString, Point } from "geojson";
 import {
   FilterSpecification,
   GeoJSONSource,
@@ -7,7 +7,11 @@ import {
   Map,
   MapSourceDataEvent,
 } from "maplibre-gl";
-import { blackWhiteForeground } from "../const";
+import {
+  asFeatureCollection,
+  blackWhiteForeground,
+  filterLineString,
+} from "../const";
 
 const INTERVAL_IN_M = 1_000;
 
@@ -45,9 +49,9 @@ export class IntervalControl implements IControl {
   private _updateRoutes(evt?: MapSourceDataEvent) {
     if (evt && evt.sourceDataType !== "content") return;
 
-    this._source.getData().then((data: FeatureCollection) => {
-      const intervals = data.features
-        .filter((feature) => feature.geometry.type === "LineString")
+    this._source.getData().then((data) => {
+      const intervals = asFeatureCollection(data)
+        .features.filter(filterLineString)
         .flatMap(this._createIntervals);
 
       this._source.map
@@ -121,8 +125,8 @@ export class IntervalControl implements IControl {
           geometry: { type: "Point", coordinates },
           properties: {
             name,
-            color: feature.properties.color,
-            group: feature.properties.name,
+            color: feature.properties?.color,
+            group: feature.properties?.name,
           },
         });
       }

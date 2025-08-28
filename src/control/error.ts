@@ -37,7 +37,7 @@ export class ErrorControl implements IControl {
       animation_ms +
       "ms";
     setTimeout(
-      () => this._container.parentNode.removeChild(this._container),
+      () => this._container.parentNode?.removeChild(this._container),
       animation_ms
     );
   }

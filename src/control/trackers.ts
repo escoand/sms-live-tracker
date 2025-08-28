@@ -1,10 +1,22 @@
-import { mdiAccountGroup } from "@mdi/js";
-import { Feature, FeatureCollection, LineString, Point } from "geojson";
+import {
+  mdiAccountGroup,
+  mdiCircleSlice2,
+  mdiCircleSlice4,
+  mdiCircleSlice6,
+  mdiCross,
+  mdiRefresh,
+} from "@mdi/js";
+import { Feature, FeatureCollection, Point } from "geojson";
 import { GeoJSONSource, LngLat, Map, MapSourceDataEvent } from "maplibre-gl";
-import { iconColor } from "../const";
+import {
+  asFeatureCollection,
+  filterLineString,
+  filterPoint,
+  iconColor,
+} from "../const";
 import { SvgIconControl } from "./base";
 
-const texts = {
+const texts: { [key: string]: { [lang: string]: string } } = {
   confirm: {
     de: "Dadurch wird eine SMS an den Tracker und eine SMS zurück gesendet. Bist du sicher?",
     _: "This will send a SMS to the tracker and a SMS back. Are you sure?",
@@ -14,6 +26,14 @@ const texts = {
   requested: { de: "angefragt" },
   sent: { de: "gesendet" },
 };
+
+const states: [string, string][] = [
+  ["failed", mdiCross],
+  ["delivered", mdiCircleSlice6],
+  ["sent", mdiCircleSlice4],
+  ["requested", mdiCircleSlice2],
+  ["refresh", mdiRefresh],
+];
 
 function getText(id: string): string {
   if (!(id in texts)) return id;
@@ -32,18 +52,12 @@ function timeDiff(then: number, now: number = Date.now()): string {
   return result + mins + "min";
 }
 
-function createError(msg: string): ErrorEvent {
-  // @ts-expect-error
+function createError(msg: string) {
   return { error: new Error(msg), type: "error" };
 }
 
-const filterPoi = (feature: Feature<Point>) =>
-  feature.geometry.type === "Point" &&
-  feature.geometry.coordinates.length > 0 &&
-  feature.properties.isDestination === true;
-
-const filterTracker = (feature: Feature) =>
-  feature.geometry.type === "Point" && feature.geometry.coordinates.length > 0;
+const filterPoi = (feature: Feature): feature is Feature<Point> =>
+  filterPoint(feature) && feature.properties?.isDestination === true;
 
 export class TrackersControl extends SvgIconControl {
   private _table: HTMLTableElement;
@@ -59,7 +73,8 @@ export class TrackersControl extends SvgIconControl {
       .append(
         ".trackers td { text-align: right; vertical-align: top; }",
         ".trackers .requested { color: grey; font-size: x-small; }",
-        ".trackers .fail { color: orangered; }"
+        ".trackers .fail { color: orangered; }",
+        ".trackers .state-icon { height: 15pt; width: 15pt; }"
       );
     this._table = this._container.appendChild(document.createElement("table"));
     this._trackers = this._table.appendChild(document.createElement("tbody"));
@@ -82,8 +97,8 @@ export class TrackersControl extends SvgIconControl {
     close.innerHTML = "❌&#xFE0E;";
     close.style.color = iconColor;
 
-    this._button.addEventListener("click", this.toggle.bind(this));
-    head.addEventListener("click", this.toggle.bind(this));
+    this._button.addEventListener("click", () => this.toggle());
+    head.addEventListener("click", () => this.toggle());
 
     return this._container;
   }
@@ -127,15 +142,16 @@ export class TrackersControl extends SvgIconControl {
   }
 
   private _updateTrackers() {
-    Promise.allSettled([this._source.getData(), this._routes.getData()]).then(
-      ([{ value: trackers }, { value: routes }]: [
-        PromiseFulfilledResult<FeatureCollection>,
-        PromiseFulfilledResult<FeatureCollection>
-      ]) => {
+    Promise.all([this._source.getData(), this._routes.getData()]).then(
+      ([data1, data2]) => {
+        const trackers = asFeatureCollection(data1);
+        const routes = asFeatureCollection(data2);
         this._findNextPoiOnRoute(routes, trackers);
         trackers.features
           .filter((feature) => feature.geometry.type === "Point")
-          .forEach(this._updateTrackerInUi.bind(this));
+          .forEach((feature) =>
+            this._updateTrackerInUi(feature as Feature<Point>)
+          );
       }
     );
   }
@@ -155,10 +171,11 @@ export class TrackersControl extends SvgIconControl {
                 <div id="${prefix}-requested" class="requested"></div>
             </td>
             <td>
-                <button id="${prefix}-button">⭮</button>
+                <button id="${prefix}-button"></button>
             </td>
         </tr>
     `;
+      // @ts-expect-error: theoretically firstElementChild could be null
       this._trackers.appendChild(row.firstElementChild);
       document
         .getElementById(`${prefix}-button`)
@@ -168,16 +185,22 @@ export class TrackersControl extends SvgIconControl {
         );
     }
 
+    const parent = document.getElementById(prefix);
+    const battery = document.getElementById(prefix + "-battery");
+    const received = document.getElementById(prefix + "-received");
+    const requested = document.getElementById(prefix + "-requested");
+    const button = document.getElementById(prefix + "-button");
+
+    if (!parent || !battery || !received || !requested || !button) return;
+
     // update tracker entry
     if (!tracker.geometry.coordinates.length) {
-      document.getElementById(prefix).classList.add("fail");
+      parent.classList.add("fail");
     } else {
-      document.getElementById(prefix).classList.remove("fail");
+      parent.classList.remove("fail");
     }
-    document.getElementById(prefix + "-battery").innerHTML =
-      tracker.properties?.battery || "";
+    battery.innerHTML = tracker.properties?.battery || "";
 
-    const received = document.getElementById(prefix + "-received");
     if (tracker.geometry.coordinates.length && tracker.properties?.received) {
       const date = new Date(tracker.properties.received).getTime();
       received.innerHTML = timeDiff(date);
@@ -185,28 +208,24 @@ export class TrackersControl extends SvgIconControl {
       received.innerHTML = "";
     }
 
-    const requested = document.getElementById(prefix + "-requested");
-    if (tracker.properties.nextPoi) {
+    if (tracker.properties?.nextPoi) {
       requested.innerHTML = tracker.properties.nextPoi;
     } else {
       requested.innerHTML = "";
     }
 
-    const button = document.getElementById(prefix + "-button");
-    const inProgress = [
-      ["failed", "⊗"],
-      ["delivered", "◕"],
-      ["sent", "◑"],
-      ["requested", "◔"],
-    ].some(([state, icon]) => {
+    button.innerHTML = "";
+    const icon = button.appendChild(document.createElement("img"));
+    icon.classList.add("state-icon");
+    const inProgress = states.some(([state, svgIconPath]) => {
       if (!tracker.properties?.[state]) return false;
+      icon.src = SvgIconControl.createSvg(svgIconPath);
       const date = new Date(tracker.properties?.[state]).getTime();
-      button.innerHTML = icon;
       button.title = `${getText(state)}: ${timeDiff(date)}`;
       return true;
     });
     if (!inProgress) {
-      button.innerHTML = "⭮";
+      icon.src = SvgIconControl.createSvg(states[states.length - 1][1]);
       button.title = "";
     }
   }
@@ -217,8 +236,8 @@ export class TrackersControl extends SvgIconControl {
   ) {
     // get LngLat and distance of every route point
     const routePoints = routes.features
-      .filter((route) => route.geometry.type === "LineString")
-      .flatMap((route: Feature<LineString>) =>
+      .filter(filterLineString)
+      .flatMap((route) =>
         route.geometry.coordinates.map((pos) => ({
           lnglat: new LngLat(pos[0], pos[1]) as LngLat,
           distance: 0,
@@ -234,17 +253,18 @@ export class TrackersControl extends SvgIconControl {
     // filter and merge POI and tracker list
     routes.features
       .filter(filterPoi)
-      .concat(trackers.features.filter(filterTracker))
+      .concat(trackers.features.filter(filterPoint))
 
       // add LngLat to POIs and trackers
-      .map((point: Feature<Point>) => {
+      .map((point) => {
+        if (!point.properties) point.properties = {};
         point.properties._lngLat = new LngLat(
           point.geometry.coordinates[0],
           point.geometry.coordinates[1]
         );
         point.properties._closestRouteDist = Infinity;
         point.properties._closestRouteIdx = -1;
-        return point;
+        return point as Feature<Point, { [name: string]: any }>;
       })
 
       // find closest route point for each POI and tracker
@@ -262,16 +282,18 @@ export class TrackersControl extends SvgIconControl {
     const sortedPois = routes.features
       .filter(filterPoi)
       .sort(
-        (a, b) => a.properties._closestRouteIdx - b.properties._closestRouteIdx
-      ) as Feature<Point>[];
+        (a, b) =>
+          a.properties?._closestRouteIdx - b.properties?._closestRouteIdx
+      );
 
     // loop through trackers and measure distance to next POI
-    trackers.features.filter(filterTracker).forEach((point: Feature<Point>) => {
+    trackers.features.filter(filterPoint).forEach((point) => {
       const nextPoi = sortedPois.find(
         (route) =>
-          route.properties._closestRouteIdx > point.properties._closestRouteIdx
+          route.properties?._closestRouteIdx >
+          point.properties?._closestRouteIdx
       );
-      if (!nextPoi) return;
+      if (!nextPoi || !point.properties || !nextPoi.properties) return;
 
       // calc distance from tracker to next POI along route
       const distance =
