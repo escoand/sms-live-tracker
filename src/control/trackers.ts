@@ -3,20 +3,16 @@ import {
   mdiCircleSlice2,
   mdiCircleSlice4,
   mdiCircleSlice6,
-  mdiCross,
-  mdiRefresh,
+  mdiCloseCircle,
+  mdiSyncCircle,
 } from "@mdi/js";
 import { Feature, FeatureCollection, Point } from "geojson";
 import { GeoJSONSource, LngLat, Map, MapSourceDataEvent } from "maplibre-gl";
-import {
-  asFeatureCollection,
-  filterLineString,
-  filterPoint,
-  iconColor,
-} from "../const";
+import { asFeatureCollection, filterLineString, filterPoint } from "../const";
 import { SvgIconControl } from "./base";
 
 const texts: { [key: string]: { [lang: string]: string } } = {
+  battery: { de: "Akku" },
   confirm: {
     de: "Dadurch wird eine SMS an den Tracker und eine SMS zurück gesendet. Bist du sicher?",
     _: "This will send a SMS to the tracker and a SMS back. Are you sure?",
@@ -25,14 +21,15 @@ const texts: { [key: string]: { [lang: string]: string } } = {
   failed: { de: "Fehler" },
   requested: { de: "angefragt" },
   sent: { de: "gesendet" },
+  update: { _: "Update" },
 };
 
 const states: [string, string][] = [
-  ["failed", mdiCross],
+  ["failed", mdiCloseCircle],
   ["delivered", mdiCircleSlice6],
   ["sent", mdiCircleSlice4],
   ["requested", mdiCircleSlice2],
-  ["refresh", mdiRefresh],
+  ["refresh", mdiSyncCircle],
 ];
 
 function getText(id: string): string {
@@ -71,34 +68,35 @@ export class TrackersControl extends SvgIconControl {
     this._container
       .appendChild(document.createElement("style"))
       .append(
-        ".trackers td { text-align: right; vertical-align: top; }",
-        ".trackers .requested { color: grey; font-size: x-small; }",
+        ".trackers { line-height: normal; margin: 2px 5px; }",
+        ".trackers .close { cursor: pointer; text-align: right; }",
+        ".trackers .info { color: grey; font-size: x-small; padding-left: 10pt; text-align: left; }",
         ".trackers .fail { color: orangered; }",
-        ".trackers .state-icon { height: 15pt; width: 15pt; }"
+        ".trackers img { height: 25px; width: 25px; }"
       );
     this._table = this._container.appendChild(document.createElement("table"));
-    this._trackers = this._table.appendChild(document.createElement("tbody"));
-    this._table.classList.add("trackers");
+    this._trackers = document.createElement("tbody");
 
     this._source.on("data", this._onSourceUpdated.bind(this));
   }
 
   onAdd(map: Map) {
-    const head = this._table
-      .insertBefore(document.createElement("thead"), this._trackers)
-      .appendChild(document.createElement("tr"));
-
+    this._table.classList.add("trackers");
     this._table.style.display = "none";
-
-    head.appendChild(document.createElement("th"));
-    head.appendChild(document.createElement("th")).append("🔋");
-    head.appendChild(document.createElement("th")).append("📌");
-    const close = head.appendChild(document.createElement("th"));
-    close.innerHTML = "❌&#xFE0E;";
-    close.style.color = iconColor;
+    this._table.innerHTML = `<thead>
+      <tr>
+        <th>#</th>
+        <th>${getText("battery")}</th>
+        <th>${getText("update")}</th>
+        <th class="close">❌&#xFE0E;</th>
+      </tr>
+    </thead>`;
+    this._table.appendChild(this._trackers);
 
     this._button.addEventListener("click", () => this.toggle());
-    head.addEventListener("click", () => this.toggle());
+    this._table.firstElementChild?.addEventListener("click", () =>
+      this.toggle()
+    );
 
     return this._container;
   }
@@ -165,33 +163,35 @@ export class TrackersControl extends SvgIconControl {
       row.innerHTML = `
         <tr id="${prefix}">
             <td>${tracker.properties?.name}</td>
-            <td><span id="${prefix}-battery"></span></td>
-            <td>
-                <div id="${prefix}-received"></div>
-                <div id="${prefix}-requested" class="requested"></div>
-            </td>
-            <td>
-                <button id="${prefix}-button"></button>
-            </td>
+            <td id="${prefix}-battery"></td>
+            <td id="${prefix}-received"></td>
+            <td rowspan="2"><button id="${prefix}-button"></button></td>
+        </tr>
+        <tr>
+          <td id="${prefix}-info" colspan="3" class="info"></td>
         </tr>
     `;
       // @ts-expect-error: theoretically firstElementChild could be null
-      this._trackers.appendChild(row.firstElementChild);
+      this._trackers.append(...row.childNodes);
       document
         .getElementById(`${prefix}-button`)
-        ?.addEventListener(
-          "click",
-          this.requestPosition.bind(this, tracker.properties?.name)
+        ?.addEventListener("click", () =>
+          this.requestPosition(tracker.properties?.name)
         );
     }
 
     const parent = document.getElementById(prefix);
     const battery = document.getElementById(prefix + "-battery");
     const received = document.getElementById(prefix + "-received");
-    const requested = document.getElementById(prefix + "-requested");
     const button = document.getElementById(prefix + "-button");
+    const info = document.getElementById(prefix + "-info");
 
-    if (!parent || !battery || !received || !requested || !button) return;
+    if (!parent || !battery || !received || !button || !info) return;
+    battery.innerHTML = "";
+    received.innerHTML = "";
+    button.innerHTML = "";
+    button.title = "";
+    info.innerHTML = "";
 
     // update tracker entry
     if (!tracker.geometry.coordinates.length) {
@@ -199,34 +199,34 @@ export class TrackersControl extends SvgIconControl {
     } else {
       parent.classList.remove("fail");
     }
-    battery.innerHTML = tracker.properties?.battery || "";
+
+    if (tracker.properties?.battery) {
+      battery.innerHTML = tracker.properties?.battery;
+    }
 
     if (tracker.geometry.coordinates.length && tracker.properties?.received) {
       const date = new Date(tracker.properties.received).getTime();
       received.innerHTML = timeDiff(date);
-    } else {
-      received.innerHTML = "";
     }
 
+    // info
     if (tracker.properties?.nextPoi) {
-      requested.innerHTML = tracker.properties.nextPoi;
-    } else {
-      requested.innerHTML = "";
+      info.appendChild(document.createElement("div")).textContent =
+        tracker.properties.nextPoi;
     }
 
-    button.innerHTML = "";
     const icon = button.appendChild(document.createElement("img"));
-    icon.classList.add("state-icon");
     const inProgress = states.some(([state, svgIconPath]) => {
       if (!tracker.properties?.[state]) return false;
       icon.src = SvgIconControl.createSvg(svgIconPath);
       const date = new Date(tracker.properties?.[state]).getTime();
-      button.title = `${getText(state)}: ${timeDiff(date)}`;
+      info.appendChild(document.createElement("div")).textContent = `${getText(
+        state
+      )}: ${timeDiff(date)}`;
       return true;
     });
     if (!inProgress) {
       icon.src = SvgIconControl.createSvg(states[states.length - 1][1]);
-      button.title = "";
     }
   }
 
