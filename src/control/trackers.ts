@@ -6,10 +6,19 @@ import {
   mdiCloseCircle,
   mdiSyncCircle,
 } from "@mdi/js";
-import { Feature, FeatureCollection, Point } from "geojson";
-import { GeoJSONSource, LngLat, Map, MapSourceDataEvent } from "maplibre-gl";
+import { Feature, FeatureCollection, LineString, Point } from "geojson";
+import {
+  GeoJSONSource,
+  LngLat,
+  Map,
+  MapMouseEvent,
+  MapSourceDataEvent,
+} from "maplibre-gl";
 import { asFeatureCollection, filterLineString, filterPoint } from "../const";
 import { SvgIconControl } from "./base";
+
+const debugSource = "debug";
+const debugProperty = "_isDebug";
 
 const texts: { [key: string]: { [lang: string]: string } } = {
   battery: { de: "Akku" },
@@ -53,6 +62,9 @@ function createError(msg: string) {
   return { error: new Error(msg), type: "error" };
 }
 
+const filterPoiRoutes = (feature: Feature): feature is Feature<LineString> =>
+  filterLineString(feature) && feature.properties?.hasDestinations === true;
+
 const filterPoi = (feature: Feature): feature is Feature<Point> =>
   filterPoint(feature) && feature.properties?.isDestination === true;
 
@@ -78,6 +90,13 @@ export class TrackersControl extends SvgIconControl {
     this._trackers = document.createElement("tbody");
 
     this._source.on("data", this._onSourceUpdated.bind(this));
+
+    const params = new URLSearchParams(window.location.search);
+
+    // activate debug
+    if (params.has("debug")) {
+      this._source.map.on("click", this._debugClick.bind(this));
+    }
   }
 
   onAdd(map: Map) {
@@ -162,7 +181,11 @@ export class TrackersControl extends SvgIconControl {
       const row = document.createElement("tbody");
       row.innerHTML = `
         <tr id="${prefix}">
-            <td>${tracker.properties?.name}</td>
+            <td>${
+              tracker.properties?.[debugProperty] === true
+                ? "Debug"
+                : tracker.properties?.name
+            }</td>
             <td id="${prefix}-battery"></td>
             <td id="${prefix}-received"></td>
             <td rowspan="2"><button id="${prefix}-button"></button></td>
@@ -236,7 +259,7 @@ export class TrackersControl extends SvgIconControl {
   ) {
     // get LngLat and distance of every route point
     const routePoints = routes.features
-      .filter(filterLineString)
+      .filter(filterPoiRoutes)
       .flatMap((route) =>
         route.geometry.coordinates.map((pos) => ({
           lnglat: new LngLat(pos[0], pos[1]) as LngLat,
@@ -290,9 +313,10 @@ export class TrackersControl extends SvgIconControl {
     trackers.features.filter(filterPoint).forEach((point) => {
       const nextPoi = sortedPois.find(
         (route) =>
-          route.properties?._closestRouteIdx >
+          route.properties?._closestRouteIdx >=
           point.properties?._closestRouteIdx
       );
+      this._debugTrack(point, nextPoi, routePoints);
       if (!nextPoi || !point.properties || !nextPoi.properties) return;
 
       // calc distance from tracker to next POI along route
@@ -303,11 +327,70 @@ export class TrackersControl extends SvgIconControl {
         nextPoi.properties._closestRouteDist;
       point.properties.nextPoi =
         (distance / 1000).toFixed(1) + "km → " + nextPoi.properties.name;
+    });
+  }
 
-      // clean up
-      delete point.properties._lngLat;
-      delete point.properties._closestRouteDist;
-      delete point.properties._closestRouteIdx;
+  private _debugTrack(
+    point: Feature<Point>,
+    nextPoi: Feature<Point> | undefined,
+    routePoints: { lnglat: LngLat }[]
+  ) {
+    if (point.properties?.[debugProperty] !== true) return;
+
+    if (!this._source.map.getSource(debugSource)) {
+      this._source.map
+        .addSource(debugSource, {
+          type: "geojson",
+          data: { type: "FeatureCollection", features: [] },
+        })
+        .addLayer({
+          id: debugSource + "-track",
+          source: debugSource,
+          type: "line",
+          paint: {
+            "line-color": "black",
+            "line-opacity": 0.75,
+            "line-width": 5,
+          },
+        });
+    }
+
+    const source = this._source.map.getSource(debugSource) as GeoJSONSource;
+    if (!nextPoi) {
+      source.setData({ type: "FeatureCollection", features: [] });
+      return;
+    }
+
+    const coordinates = [point.geometry.coordinates]
+      .concat(
+        routePoints
+          .slice(
+            point.properties._closestRouteIdx,
+            nextPoi.properties?._closestRouteIdx + 1
+          )
+          .map((point) => point.lnglat.toArray())
+      )
+      .concat([nextPoi.geometry.coordinates]);
+    source.setData({ type: "LineString", coordinates });
+  }
+
+  private _debugClick(evt: MapMouseEvent) {
+    this._source.getData().then((data) => {
+      const point: Feature = {
+        type: "Feature",
+        geometry: {
+          type: "Point",
+          coordinates: evt.lngLat.toArray(),
+        },
+        properties: { [debugProperty]: true },
+      };
+      const collection = asFeatureCollection(data);
+      const idx = collection.features.findIndex(
+        (feature) => feature.properties?.[debugProperty] === true
+      );
+      if (idx >= 0) collection.features[idx] = point;
+      else collection.features.push(point);
+      this._source.setData(collection);
     });
   }
 }
