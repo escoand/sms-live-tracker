@@ -2,6 +2,7 @@ import {
   ErrorEvent,
   FullscreenControl,
   GeoJSONSource,
+  GeoJSONSourceSpecification,
   GeolocateControl,
   Map,
   MapLibreEvent,
@@ -31,7 +32,7 @@ import "@watergis/maplibre-gl-export/dist/maplibre-gl-export.css";
 
 class LiveTrackerMap {
   private _config: LiveTrackerConfig | undefined = undefined;
-  private _map: Map;
+  private _map?: Map;
 
   constructor(container: string) {
     fetch("/config.json").then((response) => {
@@ -51,7 +52,7 @@ class LiveTrackerMap {
       attributionControl: false,
       center: [0, 0],
       container,
-      style: styles[0].replace("{apiKey}", this._config?.apiKey),
+      style: styles[0].replace("{apiKey}", this._config?.apiKey || ""),
     });
 
     this._map.on("error", this._onError.bind(this));
@@ -62,18 +63,19 @@ class LiveTrackerMap {
     const map = evt.target;
 
     // add sources
-    const routes: GeoJSONSource = map
+    const routes = map
       .addSource(routesSource, {
         type: "geojson",
         data: "/routes.json",
       })
-      .getSource(routesSource);
-    const positions: GeoJSONSource = map
-      .addSource(positionsSource, {
-        type: "geojson",
-        data: "/trackers.json",
-      })
-      .getSource(positionsSource);
+      .getSource(routesSource) as GeoJSONSource;
+    const positionsConfig = {
+      type: "geojson",
+      data: "/trackers.json",
+    } as GeoJSONSourceSpecification;
+    const positions = map
+      .addSource(positionsSource, positionsConfig)
+      .getSource(positionsSource) as GeoJSONSource;
 
     // add layers
     layers.forEach((layer) => map.addLayer(layer));
@@ -92,7 +94,7 @@ class LiveTrackerMap {
     map.addControl(intervalControl);
     map.addControl(
       new StyleSwitcherControl(
-        styles.map((_) => _.replace("{apiKey}", this._config?.apiKey)),
+        styles.map((_) => _.replace("{apiKey}", this._config?.apiKey || "")),
         [routesSource, positionsSource, intervalControl.getId()]
       )
     );
@@ -104,12 +106,13 @@ class LiveTrackerMap {
 
     // add events
     routes.once("data", () => zoomControl.zoomToFit());
-    setInterval(() => positions.setData(positions._options.data), 10 * 1000);
+    setInterval(() => positions.setData(positionsConfig.data), 10 * 1000);
   }
 
   private _onError(evt: ErrorEvent) {
-    this._map.addControl(new ErrorControl(evt), "bottom-left");
+    this._map?.addControl(new ErrorControl(evt), "bottom-left");
   }
 }
 
+// @ts-expect-error: globalThis doesn't know LiveTrackerMap
 globalThis.LiveTrackerMap = LiveTrackerMap;
