@@ -6,7 +6,7 @@ import {
   mdiCloseCircle,
   mdiSyncCircle,
 } from "@mdi/js";
-import { Feature, FeatureCollection, LineString, Point } from "geojson";
+import { Feature, LineString, Point } from "geojson";
 import {
   GeoJSONSource,
   LngLat,
@@ -14,7 +14,7 @@ import {
   MapMouseEvent,
   MapSourceDataEvent,
 } from "maplibre-gl";
-import { asFeatureCollection, filterLineString, filterPoint } from "../const";
+import { filterLineString, filterPoint, getFeatures } from "../const";
 import { SvgIconControl } from "./base";
 
 const debugSource = "debug";
@@ -161,10 +161,10 @@ export class TrackersControl extends SvgIconControl {
   private _updateTrackers() {
     Promise.all([this._source.getData(), this._routes.getData()]).then(
       ([data1, data2]) => {
-        const trackers = asFeatureCollection(data1);
-        const routes = asFeatureCollection(data2);
+        const trackers = getFeatures(data1);
+        const routes = getFeatures(data2);
         this._findNextPoiOnRoute(routes, trackers);
-        trackers.features
+        trackers
           .filter((feature) => feature.geometry.type === "Point")
           .forEach((feature) =>
             this._updateTrackerInUi(feature as Feature<Point>)
@@ -253,12 +253,9 @@ export class TrackersControl extends SvgIconControl {
     }
   }
 
-  private _findNextPoiOnRoute(
-    routes: FeatureCollection,
-    trackers: FeatureCollection
-  ) {
+  private _findNextPoiOnRoute(routes: Feature[], trackers: Feature[]) {
     // get LngLat and distance of every route point
-    const routePoints = routes.features
+    const routePoints = routes
       .filter(filterPoiRoutes)
       .flatMap((route) =>
         route.geometry.coordinates.map((pos) => ({
@@ -274,9 +271,9 @@ export class TrackersControl extends SvgIconControl {
       });
 
     // filter and merge POI and tracker list
-    routes.features
+    routes
       .filter(filterPoi)
-      .concat(trackers.features.filter(filterPoint))
+      .concat(trackers.filter(filterPoint))
 
       // add LngLat to POIs and trackers
       .map((point) => {
@@ -302,7 +299,7 @@ export class TrackersControl extends SvgIconControl {
       });
 
     // sort POIs along the route
-    const sortedPois = routes.features
+    const sortedPois = routes
       .filter(filterPoi)
       .sort(
         (a, b) =>
@@ -310,7 +307,7 @@ export class TrackersControl extends SvgIconControl {
       );
 
     // loop through trackers and measure distance to next POI
-    trackers.features.filter(filterPoint).forEach((point) => {
+    trackers.filter(filterPoint).forEach((point) => {
       const nextPoi = sortedPois.find(
         (route) =>
           route.properties?._closestRouteIdx >=
@@ -384,13 +381,13 @@ export class TrackersControl extends SvgIconControl {
         },
         properties: { [debugProperty]: true },
       };
-      const collection = asFeatureCollection(data);
-      const idx = collection.features.findIndex(
+      const collection = getFeatures(data);
+      const idx = collection.findIndex(
         (feature) => feature.properties?.[debugProperty] === true
       );
-      if (idx >= 0) collection.features[idx] = point;
-      else collection.features.push(point);
-      this._source.setData(collection);
+      if (idx >= 0) collection[idx] = point;
+      else collection.push(point);
+      this._source.setData({ type: "FeatureCollection", features: collection });
     });
   }
 }

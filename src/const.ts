@@ -130,19 +130,26 @@ export const layers: AddLayerObject[] = [
   },
 ];
 
-export const asFeatureCollection = (
-  data: GeoJSON.GeoJSON
-): FeatureCollection => {
+export const getFeatures = (data: GeoJSON.GeoJSON): Feature[] => {
   switch (data.type) {
-    case "FeatureCollection":
-      return data;
     case "Feature":
-      return { features: [data], type: "FeatureCollection" };
+      return [data];
+    case "FeatureCollection":
+      return data.features.flatMap(getFeatures);
+    case "GeometryCollection":
+      return data.geometries.map((geometry) => ({
+        type: "Feature",
+        properties: {},
+        geometry,
+      }));
     default:
-      return {
-        features: [{ type: "Feature", geometry: data, properties: {} }],
-        type: "FeatureCollection",
-      };
+      return [
+        {
+          type: "Feature",
+          properties: {},
+          geometry: data,
+        },
+      ];
   }
 };
 

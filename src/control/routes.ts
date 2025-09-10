@@ -1,7 +1,7 @@
 import { mdiGoKartTrack } from "@mdi/js";
 import { Feature, LineString, MultiLineString } from "geojson";
 import { GeoJSONSource, Map, MapSourceDataEvent } from "maplibre-gl";
-import { asFeatureCollection } from "../const";
+import { getFeatures } from "../const";
 import { SvgIconControl } from "./base";
 
 export class RoutesControl extends SvgIconControl {
@@ -47,10 +47,9 @@ export class RoutesControl extends SvgIconControl {
 
     this._routes.innerHTML = "";
     this._source.getData().then((data) =>
-      asFeatureCollection(data)
-        .features.filter(
-          (feature): feature is Feature<LineString | MultiLineString> =>
-            ["LineString", "MultiLineString"].includes(feature.geometry.type)
+      getFeatures(data)
+        .filter((feature): feature is Feature<LineString | MultiLineString> =>
+          ["LineString", "MultiLineString"].includes(feature.geometry.type)
         )
         .forEach((feature) => {
           const entry = this._routes

@@ -41,8 +41,4 @@ export abstract class SvgIconControl implements IControl {
 
     return "data:image/svg+xml," + encodeURIComponent(svg.outerHTML);
   }
-
-  static isFeatureCollection(data: GeoJSON.GeoJSON) {
-    return data && data.type === "FeatureCollection";
-  }
 }
