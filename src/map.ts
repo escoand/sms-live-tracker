@@ -30,6 +30,7 @@ import { LiveTrackerConfig } from "./types";
 
 import "@maptiler/sdk/dist/maptiler-sdk.css";
 import "@watergis/maplibre-gl-export/dist/maplibre-gl-export.css";
+import GpxExportControl from "./control/export";
 
 class LiveTrackerMap {
   private _config: LiveTrackerConfig | undefined = undefined;
@@ -105,6 +106,7 @@ class LiveTrackerMap {
     map.addControl(new RoutesControl(routes), "top-right");
     map.addControl(new TrackersControl(positions, routes), "top-left");
     map.addControl(moreControls);
+    moreControls.addControl(new GpxExportControl(routes));
     moreControls.addControl(new PrintControl());
 
     // add events
