@@ -26,7 +26,7 @@ export abstract class SvgIconControl implements IControl {
 
   abstract onAdd(map: Map): HTMLElement;
 
-  onRemove() {
+  onRemove(map: Map) {
     this._container.parentNode?.removeChild(this._container);
   }
 

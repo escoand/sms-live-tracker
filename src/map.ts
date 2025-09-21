@@ -19,8 +19,9 @@ import {
   styles,
 } from "./const";
 import { ErrorControl } from "./control/error";
-import { ExportControl } from "./control/export";
 import { IntervalControl } from "./control/interval";
+import { OverflowMenuControl } from "./control/overflow";
+import { PrintControl } from "./control/print";
 import { RoutesControl } from "./control/routes";
 import { StyleSwitcherControl } from "./control/styleswitcher";
 import { TrackersControl } from "./control/trackers";
@@ -88,6 +89,7 @@ class LiveTrackerMap {
       routeTexts,
       routeFilter
     );
+    const moreControls = new OverflowMenuControl();
     map.addControl(new ScaleControl());
     map.addControl(new FullscreenControl());
     map.addControl(new GeolocateControl({}));
@@ -102,7 +104,8 @@ class LiveTrackerMap {
     map.addControl(zoomControl, "bottom-right");
     map.addControl(new RoutesControl(routes), "top-right");
     map.addControl(new TrackersControl(positions, routes), "top-left");
-    map.addControl(new ExportControl());
+    map.addControl(moreControls);
+    moreControls.addControl(new PrintControl());
 
     // add events
     routes.once("data", () => zoomControl.zoomToFit());
