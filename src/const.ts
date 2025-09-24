@@ -1,4 +1,4 @@
-import { Feature, FeatureCollection, LineString, Point } from "geojson";
+import { Feature, LineString, Point } from "geojson";
 import {
   AddLayerObject,
   ExpressionSpecification,
@@ -58,7 +58,7 @@ export const layers: AddLayerObject[] = [
     id: routeLines,
     source: routesSource,
     type: "line",
-    filter: routeFilter,
+    filter: ["all", ["==", ["geometry-type"], "LineString"], routeFilter],
     layout: {
       "line-cap": "round",
       "line-join": "round",
@@ -129,29 +129,6 @@ export const layers: AddLayerObject[] = [
     },
   },
 ];
-
-export const getFeatures = (data: GeoJSON.GeoJSON): Feature[] => {
-  switch (data.type) {
-    case "Feature":
-      return [data];
-    case "FeatureCollection":
-      return data.features.flatMap(getFeatures);
-    case "GeometryCollection":
-      return data.geometries.map((geometry) => ({
-        type: "Feature",
-        properties: {},
-        geometry,
-      }));
-    default:
-      return [
-        {
-          type: "Feature",
-          properties: {},
-          geometry: data,
-        },
-      ];
-  }
-};
 
 export const filterLineString = (
   feature: Feature

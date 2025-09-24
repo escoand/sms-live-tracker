@@ -1,10 +1,10 @@
 import { mdiGoKartTrack } from "@mdi/js";
 import { Feature, LineString, MultiLineString } from "geojson";
 import { GeoJSONSource, Map, MapSourceDataEvent } from "maplibre-gl";
-import { getFeatures } from "../const";
-import { SvgIconControl } from "./base";
+import { toFeatures } from "../formats";
+import { SourcedSvgIconControl } from "./base";
 
-export class RoutesControl extends SvgIconControl {
+export class RoutesControl extends SourcedSvgIconControl {
   private _routes: HTMLUListElement;
   private _hidden: string[] = [];
 
@@ -28,9 +28,9 @@ export class RoutesControl extends SvgIconControl {
     return this._container;
   }
 
-  onRemove() {
+  onRemove(map: Map) {
     this._source.off("data", this._updateRoutes.bind(this));
-    super.onRemove();
+    super.onRemove(map);
   }
 
   toggle(forceClose = false) {
@@ -47,7 +47,7 @@ export class RoutesControl extends SvgIconControl {
 
     this._routes.innerHTML = "";
     this._source.getData().then((data) =>
-      getFeatures(data)
+      toFeatures(data)
         .filter((feature): feature is Feature<LineString | MultiLineString> =>
           ["LineString", "MultiLineString"].includes(feature.geometry.type)
         )

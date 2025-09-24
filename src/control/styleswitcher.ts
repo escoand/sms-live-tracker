@@ -1,5 +1,5 @@
 import { mdiLayers } from "@mdi/js";
-import { LineLayerSpecification, Map } from "maplibre-gl/dist/maplibre-gl";
+import { Map } from "maplibre-gl/dist/maplibre-gl";
 import { SvgIconControl } from "./base";
 
 export class StyleSwitcherControl extends SvgIconControl {
@@ -8,8 +8,7 @@ export class StyleSwitcherControl extends SvgIconControl {
   private _last = 0;
 
   constructor(styles: string[], keepSources: string[] = []) {
-    // @ts-expect-error: undefined not allowed
-    super(mdiLayers, undefined);
+    super(mdiLayers);
     this._styles = styles;
     this._keepSources = keepSources;
   }

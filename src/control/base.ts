@@ -4,12 +4,10 @@ import { iconColor, iconTransform, iconViewBox } from "../const";
 const svgNamespace = "http://www.w3.org/2000/svg";
 
 export abstract class SvgIconControl implements IControl {
-  protected _source: GeoJSONSource;
   protected _container: HTMLElement;
   protected _button: HTMLButtonElement;
 
-  constructor(svgIconPath: string, source: GeoJSONSource) {
-    this._source = source;
+  constructor(svgIconPath: string) {
     this._container = document.createElement("div");
     this._button = this._container.appendChild(
       document.createElement("button")
@@ -40,5 +38,14 @@ export abstract class SvgIconControl implements IControl {
       .setAttribute("d", svgIconPath);
 
     return "data:image/svg+xml," + encodeURIComponent(svg.outerHTML);
+  }
+}
+
+export abstract class SourcedSvgIconControl extends SvgIconControl {
+  protected _source: GeoJSONSource;
+
+  constructor(svgIconPath: string, source: GeoJSONSource) {
+    super(svgIconPath);
+    this._source = source;
   }
 }

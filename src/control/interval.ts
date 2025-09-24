@@ -7,7 +7,8 @@ import {
   Map,
   MapSourceDataEvent,
 } from "maplibre-gl";
-import { blackWhiteForeground, filterLineString, getFeatures } from "../const";
+import { blackWhiteForeground, filterLineString } from "../const";
+import { toFeatures } from "../formats";
 
 const INTERVAL_IN_M = 1_000;
 
@@ -46,7 +47,7 @@ export class IntervalControl implements IControl {
     if (evt && evt.sourceDataType !== "content") return;
 
     this._source.getData().then((data) => {
-      const intervals = getFeatures(data)
+      const intervals = toFeatures(data)
         .filter(filterLineString)
         .flatMap(this._createIntervals);
 

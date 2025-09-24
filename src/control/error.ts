@@ -42,3 +42,7 @@ export class ErrorControl implements IControl {
     );
   }
 }
+
+export function createError(msg: string) {
+  return { error: new Error(msg), type: "error" };
+}

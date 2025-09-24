@@ -14,8 +14,10 @@ import {
   MapMouseEvent,
   MapSourceDataEvent,
 } from "maplibre-gl";
-import { filterLineString, filterPoint, getFeatures } from "../const";
-import { SvgIconControl } from "./base";
+import { filterLineString, filterPoint } from "../const";
+import { toFeatures } from "../formats";
+import { SourcedSvgIconControl, SvgIconControl } from "./base";
+import { createError } from "./error";
 
 const debugSource = "debug";
 const debugProperty = "_isDebug";
@@ -58,17 +60,13 @@ function timeDiff(then: number, now: number = Date.now()): string {
   return result + mins + "min";
 }
 
-function createError(msg: string) {
-  return { error: new Error(msg), type: "error" };
-}
-
 const filterPoiRoutes = (feature: Feature): feature is Feature<LineString> =>
   filterLineString(feature) && feature.properties?.hasDestinations === true;
 
 const filterPoi = (feature: Feature): feature is Feature<Point> =>
   filterPoint(feature) && feature.properties?.isDestination === true;
 
-export class TrackersControl extends SvgIconControl {
+export class TrackersControl extends SourcedSvgIconControl {
   private _table: HTMLTableElement;
   private _trackers: HTMLTableSectionElement;
   private _routes: GeoJSONSource;
@@ -120,9 +118,9 @@ export class TrackersControl extends SvgIconControl {
     return this._container;
   }
 
-  onRemove() {
+  onRemove(map: Map) {
     this._source.off("data", this._onSourceUpdated.bind(this));
-    super.onRemove();
+    super.onRemove(map);
   }
 
   toggle(forceClose = false) {
@@ -161,8 +159,8 @@ export class TrackersControl extends SvgIconControl {
   private _updateTrackers() {
     Promise.all([this._source.getData(), this._routes.getData()]).then(
       ([data1, data2]) => {
-        const trackers = getFeatures(data1);
-        const routes = getFeatures(data2);
+        const trackers = toFeatures(data1);
+        const routes = toFeatures(data2);
         this._findNextPoiOnRoute(routes, trackers);
         trackers
           .filter((feature) => feature.geometry.type === "Point")
@@ -381,7 +379,7 @@ export class TrackersControl extends SvgIconControl {
         },
         properties: { [debugProperty]: true },
       };
-      const collection = getFeatures(data);
+      const collection = toFeatures(data);
       const idx = collection.findIndex(
         (feature) => feature.properties?.[debugProperty] === true
       );

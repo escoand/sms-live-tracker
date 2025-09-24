@@ -1,7 +1,7 @@
 import { mdiFitToPageOutline } from "@mdi/js";
 import { Position } from "geojson";
 import { GeoJSONSource, LngLatBounds, LngLatLike, Map } from "maplibre-gl";
-import { SvgIconControl } from "./base";
+import { SourcedSvgIconControl } from "./base";
 
 const getCoordinates = (data: GeoJSON.GeoJSON): Position[] => {
   switch (data.type) {
@@ -26,7 +26,7 @@ const getCoordinates = (data: GeoJSON.GeoJSON): Position[] => {
   }
 };
 
-export class ZoomToFitControl extends SvgIconControl {
+export class ZoomToFitControl extends SourcedSvgIconControl {
   constructor(source: GeoJSONSource) {
     super(mdiFitToPageOutline, source);
   }

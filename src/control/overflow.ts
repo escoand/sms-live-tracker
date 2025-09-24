@@ -1,6 +1,6 @@
-import { GeoJSONSource, IControl, Map } from "maplibre-gl";
-import { SvgIconControl } from "./base";
 import { mdiDotsVertical } from "@mdi/js";
+import { IControl, Map } from "maplibre-gl";
+import { SvgIconControl } from "./base";
 
 export class OverflowMenuControl extends SvgIconControl {
   private _map: Map | undefined;
@@ -8,8 +8,7 @@ export class OverflowMenuControl extends SvgIconControl {
   private _menu: HTMLElement;
 
   constructor() {
-    // @ts-expect-error
-    super(mdiDotsVertical, undefined);
+    super(mdiDotsVertical);
     this._menu = document.createElement("div");
     this._menu.className = "overflow-menu";
     this._menu.style.display = "none";
