@@ -349,7 +349,8 @@ export class TrackersControl extends SourcedSvgIconControl {
           type: "line",
           paint: {
             "line-color": "black",
-            "line-opacity": 0.75,
+            "line-dasharray": ["literal", [1, 1]],
+            "line-opacity": 0.5,
             "line-width": 5,
           },
         });

@@ -100,32 +100,24 @@ export const layers: AddLayerObject[] = [
       "text-halo-width": 1,
     },
   },
-  // tracker icons
+  // tracker symbol
   {
-    id: "tracker-icon",
-    source: positionsSource,
-    type: "circle",
-    paint: {
-      "circle-color": "transparent",
-      "circle-radius": 12,
-      "circle-stroke-color": ["get", "color"],
-      "circle-stroke-width": 2,
-    },
-  },
-  // tracker text
-  {
-    id: "tracker-text",
+    id: "tracker-symbol",
     source: positionsSource,
     type: "symbol",
     layout: {
-      "text-anchor": "center",
+      "icon-image": "marker",
+      "icon-offset": [0, -6],
+      "icon-overlap": "always",
+      "icon-size": 3,
       "text-field": ["get", "name"],
       "text-font": ["Open Sans Bold"],
+      "text-offset": [0, -1.5],
+      "text-overlap": "cooperative",
     },
     paint: {
-      "text-color": ["get", "color"],
-      "text-halo-color": blackWhiteForeground,
-      "text-halo-width": 1,
+      "icon-color": ["get", "color"],
+      "text-color": blackWhiteForeground,
     },
   },
 ];
