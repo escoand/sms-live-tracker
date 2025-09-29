@@ -6,7 +6,7 @@ import {
   mdiCloseCircle,
   mdiSyncCircle,
 } from "@mdi/js";
-import { Feature, LineString, Point } from "geojson";
+import { Feature, LineString, MultiLineString, Point } from "geojson";
 import {
   GeoJSONSource,
   LngLat,
@@ -60,7 +60,9 @@ function timeDiff(then: number, now: number = Date.now()): string {
   return result + mins + "min";
 }
 
-const filterPoiRoutes = (feature: Feature): feature is Feature<LineString> =>
+const filterPoiRoutes = (
+  feature: Feature
+): feature is Feature<LineString | MultiLineString> =>
   filterLineString(feature) && feature.properties?.hasDestinations === true;
 
 const filterPoi = (feature: Feature): feature is Feature<Point> =>
@@ -256,7 +258,10 @@ export class TrackersControl extends SourcedSvgIconControl {
     const routePoints = routes
       .filter(filterPoiRoutes)
       .flatMap((route) =>
-        route.geometry.coordinates.map((pos) => ({
+        (route.geometry.type === "MultiLineString"
+          ? route.geometry.coordinates.flat()
+          : route.geometry.coordinates
+        ).map((pos) => ({
           lnglat: new LngLat(pos[0], pos[1]) as LngLat,
           distance: 0,
         }))

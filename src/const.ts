@@ -1,4 +1,4 @@
-import { Feature, LineString, Point } from "geojson";
+import { Feature, LineString, MultiLineString, Point } from "geojson";
 import {
   AddLayerObject,
   ExpressionSpecification,
@@ -34,7 +34,7 @@ export const routeFilter: FilterSpecification = [
 const brightness: ExpressionSpecification = [
   "let",
   "rgba",
-  ["to-rgba", ["to-color", ["get", "color"]]],
+  ["to-rgba", ["to-color", ["get", "color"], "white"]],
   // https://www.w3.org/TR/AERT/#color-contrast
   [
     "+",
@@ -132,8 +132,9 @@ export const layers: AddLayerObject[] = [
 
 export const filterLineString = (
   feature: Feature
-): feature is Feature<LineString> =>
-  feature.geometry.type === "LineString" &&
+): feature is Feature<LineString | MultiLineString> =>
+  (feature.geometry.type === "LineString" ||
+    feature.geometry.type === "MultiLineString") &&
   feature.geometry.coordinates.length > 0;
 
 export const filterPoint = (feature: Feature): feature is Feature<Point> =>

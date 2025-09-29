@@ -1,4 +1,10 @@
-import { Feature, LineString, Point } from "geojson";
+import {
+  Feature,
+  FeatureCollection,
+  LineString,
+  MultiLineString,
+  Point,
+} from "geojson";
 import {
   FilterSpecification,
   GeoJSONSource,
@@ -47,56 +53,69 @@ export class IntervalControl implements IControl {
     if (evt && evt.sourceDataType !== "content") return;
 
     this._source.getData().then((data) => {
-      const intervals = toFeatures(data)
-        .filter(filterLineString)
-        .flatMap(this._createIntervals);
+      const intervalSource = this._source.map.getSource(
+        this._id
+      ) as GeoJSONSource;
+      const intervals: FeatureCollection = {
+        type: "FeatureCollection",
+        features: toFeatures(data)
+          .filter(filterLineString)
+          .flatMap(this._createIntervals),
+      };
 
-      this._source.map
-        .addSource(this._id, {
-          type: "geojson",
-          data: { type: "FeatureCollection", features: intervals },
-        })
-        .addLayer(
-          {
-            id: this._id + "-icon",
-            source: this._id,
-            type: "circle",
-            filter: this._filter,
-            paint: {
-              "circle-color": ["get", "color"],
-              "circle-opacity": 0.75,
-              "circle-radius": 10,
+      if (intervalSource) {
+        intervalSource.setData(intervals);
+      } else {
+        this._source.map
+          .addSource(this._id, {
+            type: "geojson",
+            data: intervals,
+          })
+          .addLayer(
+            {
+              id: this._id + "-icon",
+              source: this._id,
+              type: "circle",
+              filter: this._filter,
+              paint: {
+                "circle-color": ["get", "color"],
+                "circle-opacity": 0.75,
+                "circle-radius": 10,
+              },
             },
-          },
-          this._belowIcon
-        )
-        .addLayer(
-          {
-            id: this._id + "-text",
-            source: this._id,
-            type: "symbol",
-            filter: this._filter,
-            layout: {
-              "text-field": ["get", "name"],
-              "text-overlap": "never",
-              "text-size": 10,
+            this._belowIcon
+          )
+          .addLayer(
+            {
+              id: this._id + "-text",
+              source: this._id,
+              type: "symbol",
+              filter: this._filter,
+              layout: {
+                "text-field": ["get", "name"],
+                "text-overlap": "never",
+                "text-size": 10,
+              },
+              paint: {
+                "text-color": blackWhiteForeground,
+              },
             },
-            paint: {
-              "text-color": blackWhiteForeground,
-            },
-          },
-          this._belowText
-        );
+            this._belowText
+          );
+      }
     });
   }
 
-  private _createIntervals(feature: Feature<LineString>) {
+  private _createIntervals(feature: Feature<LineString | MultiLineString>) {
     let position: LngLat;
     let length = 0;
     const intervals: Feature<Point>[] = [];
 
     // iterate through each coordinate pair to create route segments
-    feature.geometry.coordinates.forEach((cur, idx) => {
+    (feature.geometry.type === "MultiLineString"
+      ? feature.geometry.coordinates.flat()
+      : feature.geometry.coordinates
+    ).forEach((cur, idx) => {
       const newPosition = new LngLat(cur[0], cur[1]);
       if (idx === 0) {
         position = newPosition;

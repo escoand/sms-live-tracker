@@ -31,6 +31,7 @@ import { LiveTrackerConfig } from "./types";
 import "@maptiler/sdk/dist/maptiler-sdk.css";
 import "@watergis/maplibre-gl-export/dist/maplibre-gl-export.css";
 import GpxExportControl from "./control/export";
+import GpxImportControl from "./control/import";
 
 class LiveTrackerMap {
   private _config: LiveTrackerConfig | undefined = undefined;
@@ -90,7 +91,6 @@ class LiveTrackerMap {
       routeTexts,
       routeFilter
     );
-    const moreControls = new OverflowMenuControl();
     map.addControl(new ScaleControl());
     map.addControl(new FullscreenControl());
     map.addControl(new GeolocateControl({}));
@@ -105,9 +105,16 @@ class LiveTrackerMap {
     map.addControl(zoomControl, "bottom-right");
     map.addControl(new RoutesControl(routes), "top-right");
     map.addControl(new TrackersControl(positions, routes), "top-left");
-    map.addControl(moreControls);
-    moreControls.addControl(new GpxExportControl(routes));
-    moreControls.addControl(new PrintControl());
+
+    // overflow menu
+    const params = new URLSearchParams(window.location.search);
+    if (params.has("pro")) {
+      const moreControls = new OverflowMenuControl();
+      map.addControl(moreControls);
+      moreControls.addControl(new GpxImportControl(routes));
+      moreControls.addControl(new GpxExportControl(routes));
+      moreControls.addControl(new PrintControl());
+    }
 
     // add events
     routes.once("data", () => zoomControl.zoomToFit());

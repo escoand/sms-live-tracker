@@ -1,9 +1,9 @@
 import { mdiFitToPageOutline } from "@mdi/js";
-import { Position } from "geojson";
+import { GeoJSON, Position } from "geojson";
 import { GeoJSONSource, LngLatBounds, LngLatLike, Map } from "maplibre-gl";
 import { SourcedSvgIconControl } from "./base";
 
-const getCoordinates = (data: GeoJSON.GeoJSON): Position[] => {
+const getCoordinates = (data: GeoJSON): Position[] => {
   switch (data.type) {
     case "Feature":
       return getCoordinates(data.geometry);
