@@ -1,5 +1,5 @@
 import { mdiFileDownloadOutline } from "@mdi/js";
-import { Feature, FeatureCollection, GeoJSON } from "geojson";
+import { Feature } from "geojson";
 import { GeoJSONSource, Map } from "maplibre-gl";
 import { toFeatures, toGPX } from "../formats";
 import { SourcedSvgIconControl } from "./base";
@@ -57,6 +57,12 @@ export default class GpxExportControl extends SourcedSvgIconControl {
           Stripped and obfuscated data for participants
         </label>
       </div>
+      <div style="margin-bottom: 10px;">
+        <label>
+          <input type="radio" name="exportType" value="geojson">
+          GeoJSON
+        </label>
+      </div>
       <button id="confirmExport">Export</button>
       <button id="cancelExport" style="margin-left: 10px;">Cancel</button>
     `;
@@ -72,8 +78,7 @@ export default class GpxExportControl extends SourcedSvgIconControl {
           'input[name="exportType"]:checked'
         ) as HTMLInputElement
       ).value;
-
-      this._export(exportType === "full");
+      this._export(exportType);
       document.body.removeChild(modal);
     });
 
@@ -84,9 +89,15 @@ export default class GpxExportControl extends SourcedSvgIconControl {
     });
   }
 
-  private _export(full: boolean) {
+  private _export(type: string) {
     this._source.getData().then((data) => {
-      if (!full) {
+      if (type === "geojson") {
+        return this._download(
+          JSON.stringify(data),
+          "application/geo+json",
+          "routes.json"
+        );
+      } else if (type !== "full") {
         data = toFeatures(data)
           .filter((feature) =>
             ["LineString", "MultiLineString"].includes(feature.geometry.type)
@@ -105,16 +116,19 @@ export default class GpxExportControl extends SourcedSvgIconControl {
           );
       }
 
-      const gpx = toGPX(data, full ? "trk" : "rte");
+      const gpx = toGPX(data, type === "full" ? "trk" : "rte");
       const xml = new XMLSerializer().serializeToString(gpx);
-      const download = document.createElement("a");
-
-      download.setAttribute(
-        "href",
-        URL.createObjectURL(new Blob([xml], { type: "application/gpx+xml" }))
-      );
-      download.setAttribute("download", "routes.xml");
-      download.click();
+      this._download(xml, "application/gpx+xml", "routes.xml");
     });
+  }
+
+  private _download(content: string, mime: string, name: string) {
+    const download = document.createElement("a");
+    download.setAttribute(
+      "href",
+      URL.createObjectURL(new Blob([content], { type: mime }))
+    );
+    download.setAttribute("download", name);
+    download.click();
   }
 }

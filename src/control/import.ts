@@ -1,9 +1,9 @@
 import { mdiFileUploadOutline } from "@mdi/js";
-import { Feature, MultiLineString, MultiPoint, Position } from "geojson";
+import { Feature } from "geojson";
 import { GeoJSONSource, Map } from "maplibre-gl";
+import { toFeatures, toGeoJSON } from "../formats";
 import { SourcedSvgIconControl } from "./base";
 import { createError } from "./error";
-import { toGeoJSON } from "../formats";
 
 const gpxNs = "http://www.topografix.com/GPX/1/1";
 
@@ -20,18 +20,39 @@ export default class GpxImportControl extends SourcedSvgIconControl {
   private _showImportDialog() {
     // upload
     const upload = document.createElement("input");
+    upload.setAttribute("accept", ".gpx,application/gpx+xml");
+    upload.setAttribute("multiple", "multiple");
     upload.setAttribute("type", "file");
     upload.addEventListener("change", (e: Event) => {
       if (!(e.target instanceof HTMLInputElement) || !e.target.files?.length)
         return;
-      const rdr = new FileReader();
-      rdr.addEventListener("load", this._import.bind(this));
-      rdr.readAsText(e.target.files[0]);
+      this._import(e.target.files);
     });
     upload.click();
   }
 
-  private _import(event: ProgressEvent<FileReader>) {
+  private _import(files: FileList) {
+    Promise.all(
+      Array.from(files).map(
+        (file) =>
+          new Promise(
+            (resolve: (value: Feature[] | undefined) => void, reject) => {
+              const rdr = new FileReader();
+              rdr.onload = (ev) => resolve(this._convert(ev));
+              rdr.onerror = reject;
+              rdr.readAsText(file);
+            }
+          )
+      )
+    ).then((results) =>
+      this._source.setData({
+        features: results.filter((_) => _ !== undefined).flat(),
+        type: "FeatureCollection",
+      })
+    );
+  }
+
+  private _convert(event: ProgressEvent<FileReader>) {
     if (event.target?.readyState !== FileReader.DONE) return;
     const gpx = new DOMParser().parseFromString(
       event.target.result,
@@ -45,8 +66,6 @@ export default class GpxImportControl extends SourcedSvgIconControl {
       return;
     }
 
-    const json = toGeoJSON(gpx);
-
-    this._source.setData(json);
+    return toFeatures(toGeoJSON(gpx));
   }
 }
