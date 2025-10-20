@@ -91,6 +91,7 @@ class LiveTrackerMap {
       routeTexts,
       routeFilter
     );
+    map.addControl(new TrackersControl(positions, routes), "top-left");
     map.addControl(new ScaleControl());
     map.addControl(new FullscreenControl());
     map.addControl(new GeolocateControl({}));
@@ -104,7 +105,7 @@ class LiveTrackerMap {
     map.addControl(new NavigationControl(), "bottom-right");
     map.addControl(zoomControl, "bottom-right");
     map.addControl(new RoutesControl(routes), "top-right");
-    map.addControl(new TrackersControl(positions, routes), "top-left");
+    map.addControl(new GpxExportControl(routes));
 
     // overflow menu
     const params = new URLSearchParams(window.location.search);
@@ -112,7 +113,6 @@ class LiveTrackerMap {
       const moreControls = new OverflowMenuControl();
       map.addControl(moreControls);
       moreControls.addControl(new GpxImportControl(routes));
-      moreControls.addControl(new GpxExportControl(routes));
       moreControls.addControl(new PrintControl());
     }
 
