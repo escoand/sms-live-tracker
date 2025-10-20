@@ -4,6 +4,8 @@ import { GeoJSONSource, Map } from "maplibre-gl";
 import { toFeatures, toGPX } from "../formats";
 import { SourcedSvgIconControl } from "./base";
 
+import "@watergis/maplibre-gl-export/dist/maplibre-gl-export.css";
+
 export default class GpxExportControl extends SourcedSvgIconControl {
   constructor(source: GeoJSONSource) {
     super(mdiDownload, source);

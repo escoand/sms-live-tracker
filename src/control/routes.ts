@@ -4,7 +4,7 @@ import { GeoJSONSource, Map, MapSourceDataEvent } from "maplibre-gl";
 import { toFeatures } from "../formats";
 import { SourcedSvgIconControl } from "./base";
 
-export class RoutesControl extends SourcedSvgIconControl {
+export default class RoutesControl extends SourcedSvgIconControl {
   private _routes: HTMLUListElement;
   private _hidden: string[] = [];
 

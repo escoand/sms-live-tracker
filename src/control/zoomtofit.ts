@@ -26,7 +26,7 @@ const getCoordinates = (data: GeoJSON): Position[] => {
   }
 };
 
-export class ZoomToFitControl extends SourcedSvgIconControl {
+export default class ZoomToFitControl extends SourcedSvgIconControl {
   constructor(source: GeoJSONSource) {
     super(mdiFitToPageOutline, source);
   }
@@ -37,7 +37,7 @@ export class ZoomToFitControl extends SourcedSvgIconControl {
     return this._container;
   }
 
-  zoomToFit() {
+  zoomToFit(animate = true) {
     this._source.getData().then((data) => {
       const bounds = getCoordinates(data).reduce(
         (bounds, coord) => bounds.extend(coord as LngLatLike),
@@ -46,7 +46,7 @@ export class ZoomToFitControl extends SourcedSvgIconControl {
           [Number.NEGATIVE_INFINITY, -90],
         ])
       );
-      this._source.map.fitBounds(bounds, { padding: 50 });
+      this._source.map.fitBounds(bounds, { padding: 50, animate });
     });
   }
 }

@@ -68,7 +68,7 @@ const filterPoiRoutes = (
 const filterPoi = (feature: Feature): feature is Feature<Point> =>
   filterPoint(feature) && feature.properties?.isDestination === true;
 
-export class TrackersControl extends SourcedSvgIconControl {
+export default class TrackersControl extends SourcedSvgIconControl {
   private _table: HTMLTableElement;
   private _trackers: HTMLTableSectionElement;
   private _routes: GeoJSONSource;

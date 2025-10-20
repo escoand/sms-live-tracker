@@ -19,19 +19,18 @@ import {
   styles,
 } from "./const";
 import { ErrorControl } from "./control/error";
-import { IntervalControl } from "./control/interval";
-import { OverflowMenuControl } from "./control/overflow";
-import { PrintControl } from "./control/print";
-import { RoutesControl } from "./control/routes";
-import { StyleSwitcherControl } from "./control/styleswitcher";
-import { TrackersControl } from "./control/trackers";
-import { ZoomToFitControl } from "./control/zoomtofit";
+import GpxExportControl from "./control/export";
+import GpxImportControl from "./control/import";
+import IntervalControl from "./control/interval";
+import OverflowMenuControl from "./control/overflow";
+import PrintControl from "./control/print";
+import RoutesControl from "./control/routes";
+import StyleSwitcherControl from "./control/styleswitcher";
+import TrackersControl from "./control/trackers";
+import ZoomToFitControl from "./control/zoomtofit";
 import { LiveTrackerConfig } from "./types";
 
 import "@maptiler/sdk/dist/maptiler-sdk.css";
-import "@watergis/maplibre-gl-export/dist/maplibre-gl-export.css";
-import GpxExportControl from "./control/export";
-import GpxImportControl from "./control/import";
 
 class LiveTrackerMap {
   private _config: LiveTrackerConfig | undefined = undefined;
@@ -117,7 +116,7 @@ class LiveTrackerMap {
     }
 
     // add events
-    routes.once("data", () => zoomControl.zoomToFit());
+    routes.once("data", () => zoomControl.zoomToFit(false));
     setInterval(() => positions.setData(positionsConfig.data), 10 * 1000);
   }
 

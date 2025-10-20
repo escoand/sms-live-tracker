@@ -5,8 +5,6 @@ import { toFeatures, toGeoJSON } from "../formats";
 import { SourcedSvgIconControl } from "./base";
 import { createError } from "./error";
 
-const gpxNs = "http://www.topografix.com/GPX/1/1";
-
 export default class GpxImportControl extends SourcedSvgIconControl {
   constructor(source: GeoJSONSource) {
     super(mdiFileUploadOutline, source);

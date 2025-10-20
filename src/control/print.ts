@@ -15,7 +15,7 @@ const moreSizes = {
   A1: [841, 594],
 };
 
-export class PrintControl extends MaplibreExportControl {
+export default class PrintControl extends MaplibreExportControl {
   constructor() {
     super({
       DPI: DPI[400],

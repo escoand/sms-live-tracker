@@ -2,7 +2,7 @@ import { mdiDotsVertical } from "@mdi/js";
 import { IControl, Map } from "maplibre-gl";
 import { SvgIconControl } from "./base";
 
-export class OverflowMenuControl extends SvgIconControl {
+export default class OverflowMenuControl extends SvgIconControl {
   private _map: Map | undefined;
   private _controls: { control: IControl; initialized: boolean }[] = [];
   private _menu: HTMLElement;

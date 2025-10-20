@@ -18,7 +18,7 @@ import { toFeatures } from "../formats";
 
 const INTERVAL_IN_M = 1_000;
 
-export class IntervalControl implements IControl {
+export default class IntervalControl implements IControl {
   private _id: string;
   private _source: GeoJSONSource;
   private _belowIcon?: string;
