@@ -18,7 +18,7 @@ import {
   routeTexts,
   styles,
 } from "./const";
-import { ErrorControl } from "./control/error";
+import ErrorControl from "./control/error";
 import GpxExportControl from "./control/export";
 import GpxImportControl from "./control/import";
 import IntervalControl from "./control/interval";

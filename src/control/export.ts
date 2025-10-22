@@ -1,6 +1,7 @@
 import { mdiDownload } from "@mdi/js";
-import { Feature, LineString, MultiLineString } from "geojson";
-import { GeoJSONSource, Map } from "maplibre-gl";
+import { FeatureCollection, Geometry } from "geojson";
+import { GeoJSONSource, LngLat, Map } from "maplibre-gl";
+import { filterPoi, filterPoiRoutes as filterPoiRoute } from "../const";
 import { toFeatures, toGPX } from "../formats";
 import { SourcedSvgIconControl } from "./base";
 
@@ -98,27 +99,59 @@ export default class GpxExportControl extends SourcedSvgIconControl {
 
       // strip down data
       else if (type !== "full") {
-        data = toFeatures(data)
-          .filter((feature): feature is Feature<LineString | MultiLineString> =>
-            ["LineString", "MultiLineString"].includes(feature.geometry.type)
+        const realData = toFeatures(data);
+        const routePoints = realData
+          .filter(filterPoiRoute)
+          .flatMap(({ geometry: { type, coordinates } }) =>
+            (type === "MultiLineString" ? coordinates.flat() : coordinates).map(
+              (cur) => new LngLat(cur[0], cur[1])
+            )
+          );
+
+        data = realData
+          .filter(filterPoi)
+          .map(
+            ({ geometry: { coordinates } }) =>
+              new LngLat(coordinates[0], coordinates[1])
           )
+          // find closest route point for each POI
+          .map((point) => {
+            let _closestRouteIdx = -1;
+            let _closestRouteDist = Number.POSITIVE_INFINITY;
+            routePoints.forEach((lnglat, idx) => {
+              const dist = point.distanceTo(lnglat);
+              if (dist < _closestRouteDist) {
+                _closestRouteIdx = idx;
+                _closestRouteDist = dist;
+              }
+            });
+            return _closestRouteIdx;
+          })
+          // convert to geojson
           .reduce(
-            (sum, feature, idx) => {
-              feature.geometry.coordinates =
-                feature.geometry.type === "MultiLineString"
-                  ? feature.geometry.coordinates.map((_) =>
-                      _.map((_) => _.slice(0, 2))
-                    )
-                  : feature.geometry.coordinates.map((_) => _.slice(0, 2));
-              feature.properties = { name: `Route ${idx + 1}` };
-              sum.features.push(feature);
+            (sum, cur, idx, arr) => {
+              const geometry: Geometry = {
+                coordinates: routePoints
+                  .slice(idx > 0 ? arr[idx - 1] : 0, cur)
+                  .map((_) => _.toArray()),
+                type: "LineString",
+              };
+              sum.features.splice(idx, 0, {
+                geometry,
+                properties: { name: `Route ${idx + 1}` },
+                type: "Feature",
+              });
+              sum.features.push({
+                geometry,
+                properties: { name: `Route ${arr.length + idx + 1}` },
+                type: "Feature",
+              });
               return sum;
             },
             {
+              features: [],
               type: "FeatureCollection",
-              features: [] as Feature[],
-              properties: {},
-            }
+            } as FeatureCollection
           );
       }
 

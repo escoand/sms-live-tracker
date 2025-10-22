@@ -131,3 +131,11 @@ export const filterLineString = (
 
 export const filterPoint = (feature: Feature): feature is Feature<Point> =>
   feature.geometry.type === "Point" && feature.geometry.coordinates.length > 0;
+
+export const filterPoi = (feature: Feature): feature is Feature<Point> =>
+  filterPoint(feature) && feature.properties?.isDestination === true;
+
+export const filterPoiRoutes = (
+  feature: Feature
+): feature is Feature<LineString | MultiLineString> =>
+  filterLineString(feature) && feature.properties?.hasDestinations === true;

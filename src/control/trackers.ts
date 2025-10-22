@@ -6,7 +6,7 @@ import {
   mdiCloseCircle,
   mdiSyncCircle,
 } from "@mdi/js";
-import { Feature, LineString, MultiLineString, Point } from "geojson";
+import { Feature, Point } from "geojson";
 import {
   GeoJSONSource,
   LngLat,
@@ -14,10 +14,10 @@ import {
   MapMouseEvent,
   MapSourceDataEvent,
 } from "maplibre-gl";
-import { filterLineString, filterPoint } from "../const";
+import { filterPoi, filterPoint, filterPoiRoutes } from "../const";
 import { toFeatures } from "../formats";
 import { SourcedSvgIconControl, SvgIconControl } from "./base";
-import { createError } from "./error";
+import ErrorControl from "./error";
 
 const debugSource = "debug";
 const debugProperty = "_isDebug";
@@ -59,14 +59,6 @@ function timeDiff(then: number, now: number = Date.now()): string {
   if (days || hours) result += hours + "h ";
   return result + mins + "min";
 }
-
-const filterPoiRoutes = (
-  feature: Feature
-): feature is Feature<LineString | MultiLineString> =>
-  filterLineString(feature) && feature.properties?.hasDestinations === true;
-
-const filterPoi = (feature: Feature): feature is Feature<Point> =>
-  filterPoint(feature) && feature.properties?.isDestination === true;
 
 export default class TrackersControl extends SourcedSvgIconControl {
   private _table: HTMLTableElement;
@@ -145,7 +137,7 @@ export default class TrackersControl extends SourcedSvgIconControl {
         (response) =>
           !response.ok &&
           this._source.map.fire(
-            createError(
+            ErrorControl.createError(
               `${response.statusText} (${response.status}): ${response.url}`
             )
           )

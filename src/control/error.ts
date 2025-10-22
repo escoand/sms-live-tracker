@@ -3,7 +3,7 @@ import { ErrorEvent, IControl } from "maplibre-gl";
 const timeout_ms = 15 * 1000;
 const animation_ms = 0.5 * 1000;
 
-export class ErrorControl implements IControl {
+export default class ErrorControl implements IControl {
   private _container: HTMLElement;
 
   constructor(evt: ErrorEvent) {
@@ -41,8 +41,8 @@ export class ErrorControl implements IControl {
       animation_ms
     );
   }
-}
 
-export function createError(msg: string) {
-  return { error: new Error(msg), type: "error" };
+  static createError(msg: string) {
+    return { error: new Error(msg), type: "error" };
+  }
 }

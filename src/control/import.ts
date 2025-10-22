@@ -3,7 +3,7 @@ import { Feature } from "geojson";
 import { GeoJSONSource, Map } from "maplibre-gl";
 import { toFeatures, toGeoJSON } from "../formats";
 import { SourcedSvgIconControl } from "./base";
-import { createError } from "./error";
+import ErrorControl from "./error";
 
 export default class GpxImportControl extends SourcedSvgIconControl {
   constructor(source: GeoJSONSource) {
@@ -60,7 +60,10 @@ export default class GpxImportControl extends SourcedSvgIconControl {
     // parsing error
     const error = gpx.querySelector("parsererror");
     if (error) {
-      this._source.map?.fire("error", createError(error.textContent));
+      this._source.map?.fire(
+        "error",
+        ErrorControl.createError(error.textContent)
+      );
       return;
     }
 
