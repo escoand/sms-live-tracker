@@ -1,4 +1,4 @@
-import { mdiFileUploadOutline } from "@mdi/js";
+import { mdiUpload } from "@mdi/js";
 import { Feature } from "geojson";
 import { GeoJSONSource, Map } from "maplibre-gl";
 import { toFeatures, toGeoJSON } from "../formats";
@@ -7,7 +7,7 @@ import ErrorControl from "./error";
 
 export default class GpxImportControl extends SourcedSvgIconControl {
   constructor(source: GeoJSONSource) {
-    super(mdiFileUploadOutline, source);
+    super(mdiUpload, source);
   }
 
   onAdd(map: Map): HTMLElement {

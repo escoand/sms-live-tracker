@@ -104,16 +104,13 @@ class LiveTrackerMap {
     map.addControl(new NavigationControl(), "bottom-right");
     map.addControl(zoomControl, "bottom-right");
     map.addControl(new RoutesControl(routes), "top-right");
-    map.addControl(new GpxExportControl(routes));
 
     // overflow menu
-    const params = new URLSearchParams(window.location.search);
-    if (params.has("pro")) {
-      const moreControls = new OverflowMenuControl();
-      map.addControl(moreControls);
-      moreControls.addControl(new GpxImportControl(routes));
-      moreControls.addControl(new PrintControl());
-    }
+    const moreControls = new OverflowMenuControl();
+    map.addControl(moreControls);
+    moreControls.addControl(new GpxExportControl(routes));
+    moreControls.addControl(new GpxImportControl(routes));
+    moreControls.addControl(new PrintControl());
 
     // add events
     routes.once("data", () => zoomControl.zoomToFit(false));
