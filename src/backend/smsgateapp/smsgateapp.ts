@@ -36,12 +36,11 @@ export class SmsGateApp implements TrackersBackend {
 
     try {
       const body: Message = {
-        id: "",
+        isEncrypted: true,
+        phoneNumbers: [this._crypt.encrypt(tracker.properties?.number)],
         textMessage: {
           text: this._crypt.encrypt(process.env.API_MESSAGE || ""),
         },
-        phoneNumbers: [this._crypt.encrypt(tracker.properties?.number)],
-        isEncrypted: true,
       };
 
       return fetch("https://api.sms-gate.app/3rdparty/v1/messages", {
