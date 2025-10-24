@@ -52,6 +52,7 @@ export class SmsGateApp implements TrackersBackend {
         },
         method: "POST",
       }).then((response) => {
+        response.text().then((msg) => console.log("upstream response: ", msg));
         if (!response.ok) {
           return Promise.reject(
             new Error(
