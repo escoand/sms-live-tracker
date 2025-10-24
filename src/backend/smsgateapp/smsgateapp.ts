@@ -38,6 +38,8 @@ export class SmsGateApp implements TrackersBackend {
       const body: Message = {
         isEncrypted: true,
         phoneNumbers: [this._crypt.encrypt(tracker.properties?.number)],
+        priority: 100,
+        ttl: 3600,
         textMessage: {
           text: this._crypt.encrypt(process.env.API_MESSAGE || ""),
         },
