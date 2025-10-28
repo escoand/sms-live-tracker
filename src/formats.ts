@@ -138,8 +138,14 @@ export const toGeoJSON = (gpx: Document): GeoJSON =>
 export const toGPX = (
   json: GeoJSON,
   trackType: "trk" | "rte" = "trk"
-): Document =>
-  toFeatures(json).reduce((gpx, feature) => {
+): Document => {
+  const doc = document.implementation.createDocument(gpxNs, "gpx", null);
+  doc.insertBefore(
+    doc.createProcessingInstruction("xml", 'version="1.0" encoding="UTF-8"'),
+    doc.documentElement
+  );
+
+  toFeatures(json).forEach((feature) => {
     // convert LineString to MultiLineString
     if (feature.geometry.type === "LineString") {
       feature.geometry = {
@@ -151,7 +157,7 @@ export const toGPX = (
 
     // point
     if (feature.geometry.type === "Point") {
-      const wpt = gpx.documentElement.appendChild(
+      const wpt = doc.documentElement.appendChild(
         document.createElementNS(gpxNs, "wpt")
       );
       _addCoords(wpt, feature.geometry.coordinates);
@@ -163,7 +169,7 @@ export const toGPX = (
       trackType === "trk" &&
       feature.geometry.type === "MultiLineString"
     ) {
-      const track = gpx.documentElement.appendChild(
+      const track = doc.documentElement.appendChild(
         document.createElementNS(gpxNs, "trk")
       );
       _mapToTags(feature.properties, track);
@@ -182,7 +188,7 @@ export const toGPX = (
 
     // line as route
     else if (feature.geometry.type === "MultiLineString") {
-      const route = gpx.documentElement.appendChild(
+      const route = doc.documentElement.appendChild(
         document.createElementNS(gpxNs, "rte")
       );
       _mapToTags(feature.properties, route);
@@ -195,9 +201,10 @@ export const toGPX = (
           )
         );
     }
+  });
 
-    return gpx;
-  }, document.implementation.createDocument(gpxNs, "gpx", null));
+  return doc;
+};
 
 const _mapToProperties = (node: Element) =>
   Object.fromEntries(

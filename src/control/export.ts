@@ -1,13 +1,23 @@
 import { mdiDownload } from "@mdi/js";
-import { FeatureCollection, Geometry } from "geojson";
+import { FeatureCollection, GeoJSON, Geometry } from "geojson";
 import { GeoJSONSource, LngLat, Map } from "maplibre-gl";
+import simplify from "simplify-js";
 import { filterPoi, filterPoiRoutes as filterPoiRoute } from "../const";
 import { toFeatures, toGPX } from "../formats";
 import { SourcedSvgIconControl } from "./base";
 
 import "@watergis/maplibre-gl-export/dist/maplibre-gl-export.css";
 
+const SOURCE_NAME = "simplified";
+const SIMPLIFICATION_BASE = 0.00004;
+const SIMPLIFICATION_FACTOR = 2;
+const SIMPLIFICATION_STEPS = 10;
+
 export default class GpxExportControl extends SourcedSvgIconControl {
+  private _simplifyOptions = {
+    factor: 0,
+  };
+
   constructor(source: GeoJSONSource) {
     super(mdiDownload, source);
   }
@@ -20,40 +30,39 @@ export default class GpxExportControl extends SourcedSvgIconControl {
   private _showExportModal() {
     const modal = document.createElement("div");
     modal.style.cssText = `
-      align-items: center;
-      background: rgba(0, 0, 0, 0.5);
-      display: flex;
-      height: 100%;
-      justify-content: center;
-      left: 0;
-      position: fixed;
-      top: 0;
-      width: 100%;
-      z-index: 1000;
-    `;
-
-    const modalContent = document.createElement("div");
-    modalContent.style.cssText = `
       background-color: white;
-      border-radius: 5px;
+      border-radius: 0 0 5px 5px;
+      left: calc(50% - 150px);
       padding: 20px;
+      position: absolute;
+      top: 0px;
       width: 300px;
     `;
 
-    modalContent.innerHTML = `
+    modal.innerHTML = `
       <h3>Export</h3>
       <div style="margin-bottom: 10px;">
         <label>
-          <input type="radio" name="exportType" value="full">
+          <input type="radio" name="exportType" value="full" checked>
           GPX - <i>all routes and waypoints</i>
         </label>
-        </div>
+      </div>
+      <hr/>
       <div style="margin-bottom: 10px;">
         <label>
           <input type="radio" name="exportType" value="stripped">
           GPX - <i>for team GPS devices</i>
+        <div style="margin-left: 25px">
+          <label>
+            Simplification
+            <input id="simplification" type="range" min="1" max="${SIMPLIFICATION_STEPS}" value="${(
+      SIMPLIFICATION_STEPS / 2
+    ).toFixed()}" style="vertical-align: top" />
+          </label>
+        </div>
         </label>
       </div>
+      <hr/>
       <div style="margin-bottom: 10px;">
         <label>
           <input type="radio" name="exportType" value="geojson">
@@ -66,8 +75,30 @@ export default class GpxExportControl extends SourcedSvgIconControl {
       </div>
     `;
 
-    modal.appendChild(modalContent);
     this._source.map.getContainer().appendChild(modal);
+
+    // simplification
+    const radio = modal.querySelector(
+      'input[type="radio"][value="stripped"]'
+    ) as HTMLInputElement;
+    const slider = modal.querySelector("#simplification") as HTMLInputElement;
+    const simplify = (show = true) => {
+      if (show) {
+        radio.checked = true;
+        this._simplifyOptions.factor = parseInt(slider.value);
+      } else {
+        this._simplifyOptions.factor = 0;
+      }
+      this._showSimplification();
+    };
+    slider.addEventListener("change", () => simplify(true));
+    modal
+      .querySelectorAll('input[type="radio"]')
+      .forEach((elem) =>
+        elem.addEventListener("change", () =>
+          simplify(elem.getAttribute("value") === "stripped")
+        )
+      );
 
     // export button click
     modal.querySelector("#confirmExport")?.addEventListener("click", () => {
@@ -86,6 +117,112 @@ export default class GpxExportControl extends SourcedSvgIconControl {
     });
   }
 
+  private _showSimplification() {
+    const emptyData: GeoJSON = { type: "Point", coordinates: [] };
+    let simplifiedSource: GeoJSONSource | undefined =
+      this._source.map.getSource(SOURCE_NAME);
+
+    // add source
+    if (this._simplifyOptions.factor === 0) {
+      return simplifiedSource?.setData(emptyData);
+    } else if (!simplifiedSource) {
+      simplifiedSource = this._source.map
+        .addLayer({
+          id: SOURCE_NAME,
+          source: {
+            type: "geojson",
+            data: emptyData,
+          },
+          type: "circle",
+          paint: { "circle-color": "yellow" },
+        })
+        .addLayer({
+          id: SOURCE_NAME + "-route",
+          source: SOURCE_NAME,
+          type: "line",
+          paint: {
+            "line-color": "yellow",
+            "line-dasharray": [3, 3],
+            "line-width": 2,
+          },
+        })
+        .getSource(SOURCE_NAME);
+    }
+
+    this._source.getData().then((data) => {
+      data = this._simplifyRoute(data);
+      simplifiedSource?.setData(data);
+    });
+  }
+
+  private _simplifyRoute(data: GeoJSON) {
+    const features = toFeatures(data);
+
+    const routePoints = features
+      .filter(filterPoiRoute)
+      .flatMap(({ geometry: { type, coordinates } }) =>
+        (type === "MultiLineString" ? coordinates.flat() : coordinates).map(
+          (cur) => new LngLat(cur[0], cur[1])
+        )
+      );
+
+    return (
+      features
+        .filter(filterPoi)
+        .map(
+          ({ geometry: { coordinates } }) =>
+            new LngLat(coordinates[0], coordinates[1])
+        )
+
+        // find closest route point for each POI
+        .map((point) => {
+          let _closestRouteIdx = -1;
+          let _closestRouteDist = Number.POSITIVE_INFINITY;
+          routePoints.forEach((lnglat, idx) => {
+            const dist = point.distanceTo(lnglat);
+            if (dist < _closestRouteDist) {
+              _closestRouteIdx = idx;
+              _closestRouteDist = dist;
+            }
+          });
+          return _closestRouteIdx;
+        })
+
+        // split into independent routes
+        .map((cur, idx, arr) =>
+          routePoints
+            .slice(idx > 0 ? arr[idx - 1] + 1 : 0, cur + 1)
+            .map((_) => _.toArray())
+        )
+
+        // simplify route
+        .map((route) =>
+          simplify(
+            route.map((point) => ({ x: point[0], y: point[1] })),
+            SIMPLIFICATION_BASE *
+              SIMPLIFICATION_FACTOR *
+              this._simplifyOptions.factor
+          )
+        )
+
+        // convert to geojson
+        .reduce(
+          (sum, cur) => {
+            const geometry: Geometry = {
+              coordinates: cur.map((_) => [_.x, _.y]),
+              type: "LineString",
+            };
+            sum.features.push({ geometry, properties: {}, type: "Feature" });
+            return sum;
+          },
+          {
+            features: [],
+            type: "FeatureCollection",
+          } as FeatureCollection
+        )
+    );
+  }
+
   private _export(type: string) {
     this._source.getData().then((data) => {
       // geojson output
@@ -99,60 +236,7 @@ export default class GpxExportControl extends SourcedSvgIconControl {
 
       // strip down data
       else if (type !== "full") {
-        const realData = toFeatures(data);
-        const routePoints = realData
-          .filter(filterPoiRoute)
-          .flatMap(({ geometry: { type, coordinates } }) =>
-            (type === "MultiLineString" ? coordinates.flat() : coordinates).map(
-              (cur) => new LngLat(cur[0], cur[1])
-            )
-          );
-
-        data = realData
-          .filter(filterPoi)
-          .map(
-            ({ geometry: { coordinates } }) =>
-              new LngLat(coordinates[0], coordinates[1])
-          )
-          // find closest route point for each POI
-          .map((point) => {
-            let _closestRouteIdx = -1;
-            let _closestRouteDist = Number.POSITIVE_INFINITY;
-            routePoints.forEach((lnglat, idx) => {
-              const dist = point.distanceTo(lnglat);
-              if (dist < _closestRouteDist) {
-                _closestRouteIdx = idx;
-                _closestRouteDist = dist;
-              }
-            });
-            return _closestRouteIdx;
-          })
-          // convert to geojson
-          .reduce(
-            (sum, cur, idx, arr) => {
-              const geometry: Geometry = {
-                coordinates: routePoints
-                  .slice(idx > 0 ? arr[idx - 1] : 0, cur)
-                  .map((_) => _.toArray()),
-                type: "LineString",
-              };
-              sum.features.splice(idx, 0, {
-                geometry,
-                properties: { name: `Route ${idx + 1}` },
-                type: "Feature",
-              });
-              sum.features.push({
-                geometry,
-                properties: { name: `Route ${arr.length + idx + 1}` },
-                type: "Feature",
-              });
-              return sum;
-            },
-            {
-              features: [],
-              type: "FeatureCollection",
-            } as FeatureCollection
-          );
+        data = this._simplifyRoute(data);
       }
 
       const gpx = toGPX(data, type === "full" ? "trk" : "rte");
