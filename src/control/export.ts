@@ -12,6 +12,7 @@ const SOURCE_NAME = "simplified";
 const SIMPLIFICATION_BASE = 0.00004;
 const SIMPLIFICATION_FACTOR = 2;
 const SIMPLIFICATION_STEPS = 10;
+const ROUTE_COUNT = 10;
 
 export default class GpxExportControl extends SourcedSvgIconControl {
   private _simplifyOptions = {
@@ -23,11 +24,16 @@ export default class GpxExportControl extends SourcedSvgIconControl {
   }
 
   onAdd(map: Map): HTMLElement {
-    this._button.addEventListener("click", this._showExportModal.bind(this));
+    this._button.addEventListener("click", this._showModal.bind(this));
     return this._container;
   }
 
-  private _showExportModal() {
+  onRemove(map: Map): void {
+    this._clean(map);
+    super.onRemove(map);
+  }
+
+  private _showModal() {
     const modal = document.createElement("div");
     modal.style.cssText = `
       background-color: white;
@@ -108,11 +114,13 @@ export default class GpxExportControl extends SourcedSvgIconControl {
         ) as HTMLInputElement
       ).value;
       this._export(exportType);
+      this._clean(this._source.map);
       modal.parentNode?.removeChild(modal);
     });
 
     // cancel button click
     modal.querySelector("#cancelExport")?.addEventListener("click", () => {
+      this._clean(this._source.map);
       modal.parentNode?.removeChild(modal);
     });
   }
@@ -237,6 +245,14 @@ export default class GpxExportControl extends SourcedSvgIconControl {
       // strip down data
       else if (type !== "full") {
         data = this._simplifyRoute(data);
+        const count = data.features.length;
+        for (let i = 0; i < ROUTE_COUNT; i++) {
+          if (i >= count)
+            data.features.push(
+              JSON.parse(JSON.stringify(data.features[i % count]))
+            );
+          data.features[i].properties = { name: `Route ${i + 1}` };
+        }
       }
 
       const gpx = toGPX(data, type === "full" ? "trk" : "rte");
@@ -253,5 +269,13 @@ export default class GpxExportControl extends SourcedSvgIconControl {
       URL.createObjectURL(new Blob([content], { type: mime }))
     );
     download.click();
+  }
+
+  private _clean(map: Map) {
+    Object.keys(map.style._layers).forEach(
+      (layer) =>
+        map.getLayer(layer)?.source === SOURCE_NAME && map.removeLayer(layer)
+    );
+    map.removeSource(SOURCE_NAME);
   }
 }
