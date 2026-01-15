@@ -1,14 +1,14 @@
 {
   "dependencies": {
-    "@maptiler/sdk": "^3.7.0",
-    "@mdi/js": "^7.4.47",
-    "@types/geojson": "^7946.0.16",
-    "@watergis/maplibre-gl-export": "^4.0.1",
-    "browserslist-to-esbuild": "^2.1.1",
-    "esbuild": "^0.25.9",
-    "hono": "^4.9.4",
-    "maplibre-gl": "^5.7.0",
-    "simplify-js": "^1.2.4"
+    "@maptiler/sdk": "3.10.1",
+    "@mdi/js": "7.4.47",
+    "@types/geojson": "7946.0.16",
+    "@watergis/maplibre-gl-export": "4.1.0",
+    "browserslist-to-esbuild": "2.1.1",
+    "esbuild": "0.25.12",
+    "hono": "4.11.4",
+    "maplibre-gl": "5.16.0",
+    "simplify-js": "1.2.4"
   },
   "scripts": {
     "build": "deno run --allow-env --allow-read --allow-run --allow-write=www npm:esbuild --bundle --minify --outfile=www/index.js --sourcemap src/map.ts",
