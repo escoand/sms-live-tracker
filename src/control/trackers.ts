@@ -265,6 +265,8 @@ export default class TrackersControl extends SourcedSvgIconControl {
         return cur;
       });
 
+    if (!routePoints.length) return;
+
     // filter and merge POI and tracker list
     routes
       .filter(filterPoi)
