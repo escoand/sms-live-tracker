@@ -8,7 +8,7 @@ RUN deno install && \
     deno task build
 
 # runtime
-FROM docker.io/denoland/deno:distroless@sha256:d2c280e46eb92bce226305c5f1fd0b1242b7bd6e917bdf84bb76b78813d11e05
+FROM docker.io/denoland/deno:distroless@sha256:eef2ff799ee2395ce261148cd72053d04d4ae8cbdae20f38277864b33ba3ae90
 WORKDIR /app
 COPY package.json main.ts    .
 COPY src                     src
