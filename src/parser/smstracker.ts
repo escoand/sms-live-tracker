@@ -1,5 +1,5 @@
-import { Feature, Point, Position } from "npm:geojson";
-import { TrackersParser } from "../types.d.ts";
+import { Feature, Point, Position } from "geojson";
+import type { TrackersParser } from "../types.d.ts";
 
 export class SmsTrackerParser implements TrackersParser {
   parse(message: string, tracker: Feature<Point>): boolean {

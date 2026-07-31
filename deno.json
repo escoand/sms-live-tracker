@@ -1,0 +1,7 @@
+{
+  "imports": {
+    "hono": "npm:hono@^4.12.32",
+    "hono/": "npm:hono@^4.12.32/"
+  },
+  "nodeModulesDir": "auto"
+}

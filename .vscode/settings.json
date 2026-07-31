@@ -1,4 +1,6 @@
 {
+  "deno.config": "./deno.json",
+  "deno.enable": true,
   "deno.enablePaths": [
     "./main.ts",
     "./src/backend",
@@ -6,6 +8,5 @@
     "./src/store.ts",
     "./test/"
   ],
-  "editor.inlayHints.enabled": "off",
-  "deno.enable": true
+  "editor.inlayHints.enabled": "off"
 }

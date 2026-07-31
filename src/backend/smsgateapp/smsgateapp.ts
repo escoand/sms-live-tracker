@@ -1,7 +1,7 @@
-import process from "node:process";
+// deno-lint-ignore-file no-process-global
 import { Encryptor } from "../../crypt.ts";
-import { TrackersBackend, TrackersStore } from "../../types.d.ts";
-import {
+import type { TrackersBackend, TrackersStore } from "../../types.d.ts";
+import type {
   HealthCheck,
   Message,
   SmsDeliveredPayload,
@@ -28,7 +28,7 @@ export class SmsGateApp implements TrackersBackend {
 
     if (!tracker) {
       return Promise.reject(
-        new Error(`requested tracker '${trackerName}' is unknown`)
+        new Error(`requested tracker '${trackerName}' is unknown`),
       );
     }
 
@@ -57,8 +57,8 @@ export class SmsGateApp implements TrackersBackend {
         if (!response.ok) {
           return Promise.reject(
             new Error(
-              `subrequest to ${response.url} failed (${response.status}: ${response.statusText})`
-            )
+              `subrequest to ${response.url} failed (${response.status}: ${response.statusText})`,
+            ),
           );
         }
         if (!tracker.properties) tracker.properties = {};
@@ -82,7 +82,7 @@ export class SmsGateApp implements TrackersBackend {
         // @ts-expect-error: payload may be undefined
         event.payload.phoneNumber = this._crypt.decrypt(
           // @ts-expect-error: payload may be undefined
-          event.payload.phoneNumber
+          event.payload.phoneNumber,
         );
       } catch {
         // ignore
@@ -103,7 +103,7 @@ export class SmsGateApp implements TrackersBackend {
         const payload = event.payload as SmsSentPayload;
 
         console.info(
-          `sms sent to ${payload.phoneNumber} (tracker: ${tracker?.properties?.name}) at ${payload.sentAt}`
+          `sms sent to ${payload.phoneNumber} (tracker: ${tracker?.properties?.name}) at ${payload.sentAt}`,
         );
         if (tracker && tracker.properties) {
           delete tracker.properties.failed;
@@ -119,7 +119,7 @@ export class SmsGateApp implements TrackersBackend {
       else if (event.event === "sms:delivered") {
         const payload = event.payload as SmsDeliveredPayload;
         console.info(
-          `sms delivered to ${payload.phoneNumber} (tracker: ${tracker?.properties?.name}) at ${payload.deliveredAt}`
+          `sms delivered to ${payload.phoneNumber} (tracker: ${tracker?.properties?.name}) at ${payload.deliveredAt}`,
         );
         if (tracker && tracker.properties) {
           delete tracker.properties.failed;
@@ -127,7 +127,7 @@ export class SmsGateApp implements TrackersBackend {
           delete tracker.properties.sent;
           if (payload.deliveredAt)
             tracker.properties.delivered = new Date(
-              payload.deliveredAt
+              payload.deliveredAt,
             ).toISOString();
           this._store.syncTrackers();
         }
@@ -138,7 +138,7 @@ export class SmsGateApp implements TrackersBackend {
         const payload = event.payload as SmsReceivedPayload;
         console.info(
           `sms received from ${payload.phoneNumber} (tracker: ${tracker?.properties?.name}) at ${payload.receivedAt}:`,
-          payload.message?.replace(/\r/g, "\\r").replace(/\n/g, "\\n")
+          payload.message?.replace(/\r/g, "\\r").replace(/\n/g, "\\n"),
         );
         if (tracker && tracker.properties) {
           delete tracker.properties.failed;
@@ -147,7 +147,7 @@ export class SmsGateApp implements TrackersBackend {
           delete tracker.properties.delivered;
           if (payload.receivedAt)
             tracker.properties.received = new Date(
-              payload.receivedAt
+              payload.receivedAt,
             ).toISOString();
           if (payload.message)
             this._store.parseMessage(payload.message, tracker);
@@ -160,12 +160,12 @@ export class SmsGateApp implements TrackersBackend {
         const payload = event.payload as SmsFailedPayload;
         console.warn(
           `sms failed to ${payload.phoneNumber} (tracker: ${tracker?.properties?.name}) at ${payload.failedAt}:`,
-          payload.reason
+          payload.reason,
         );
         if (tracker && tracker.properties) {
           if (payload.failedAt)
             tracker.properties.failed = new Date(
-              payload.failedAt
+              payload.failedAt,
             ).toISOString();
           delete tracker.properties.requested;
           delete tracker.properties.sent;
@@ -185,7 +185,7 @@ export class SmsGateApp implements TrackersBackend {
               check.description,
               check.observedValue,
               "(" + check.observedUnit + "):",
-              check.status
+              check.status,
             );
           });
         } else {

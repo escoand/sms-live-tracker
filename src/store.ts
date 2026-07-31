@@ -1,7 +1,7 @@
 import { readFile, writeFile } from "node:fs/promises";
-import { Feature, FeatureCollection, Point } from "npm:geojson";
+import { Feature, FeatureCollection, Point } from "geojson";
 import { SmsTrackerParser } from "./parser/smstracker.ts";
-import { TrackersStore, TrackersParser } from "./types.d.ts";
+import type { TrackersStore, TrackersParser } from "./types.d.ts";
 
 export class TrackerStore implements TrackersStore {
   private _trackersFile: string;
@@ -24,7 +24,7 @@ export class TrackerStore implements TrackersStore {
     return this._data?.features?.find(
       (_: Feature) =>
         _.properties?.name === trackerNameOrNumber ||
-        _.properties?.number === trackerNameOrNumber
+        _.properties?.number === trackerNameOrNumber,
     );
   }
 
@@ -32,7 +32,7 @@ export class TrackerStore implements TrackersStore {
     if (!this._parsers.some((parser) => parser.parse(message, tracker))) {
       console.warn(
         "no parser able to parse message:",
-        message.replace(/\r/g, "\\r").replace(/\n/g, "\\n")
+        message.replace(/\r/g, "\\r").replace(/\n/g, "\\n"),
       );
     }
   }
