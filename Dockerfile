@@ -1,5 +1,5 @@
 # frontend
-FROM docker.io/denoland/deno:alpine AS builder
+FROM docker.io/denoland/deno:alpine@sha256:774694967decb96ff808f9554c3c3ae4c1ea1d806e17e730f68fa6b2bbf3cc66 AS builder
 WORKDIR /app
 COPY deno.lock package.json .
 COPY src                    src
@@ -8,7 +8,7 @@ RUN deno install && \
     deno task build
 
 # runtime
-FROM docker.io/denoland/deno:distroless
+FROM docker.io/denoland/deno:distroless@sha256:d2c280e46eb92bce226305c5f1fd0b1242b7bd6e917bdf84bb76b78813d11e05
 WORKDIR /app
 COPY package.json main.ts    .
 COPY src                     src
