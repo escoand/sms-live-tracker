@@ -1,5 +1,5 @@
 # frontend
-FROM docker.io/denoland/deno:alpine@sha256:774694967decb96ff808f9554c3c3ae4c1ea1d806e17e730f68fa6b2bbf3cc66 AS builder
+FROM docker.io/denoland/deno:alpine@sha256:13851184d6705150b8b230c5377f26c3bd182865d28700bb72bc0b2c271b504a AS builder
 WORKDIR /app
 COPY deno.lock package.json .
 COPY src                    src
