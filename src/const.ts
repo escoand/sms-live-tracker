@@ -3,7 +3,7 @@ import {
   AddLayerObject,
   ExpressionSpecification,
   FilterSpecification,
-} from "maplibre-gl/dist/maplibre-gl";
+} from "maplibre-gl";
 
 export const iconColor = "#333";
 export const iconTransform = "scale(0.6)";
@@ -123,7 +123,7 @@ export const layers: AddLayerObject[] = [
 ];
 
 export const filterLineString = (
-  feature: Feature
+  feature: Feature,
 ): feature is Feature<LineString | MultiLineString> =>
   (feature.geometry.type === "LineString" ||
     feature.geometry.type === "MultiLineString") &&
@@ -136,6 +136,6 @@ export const filterPoi = (feature: Feature): feature is Feature<Point> =>
   filterPoint(feature) && feature.properties?.isDestination === true;
 
 export const filterPoiRoutes = (
-  feature: Feature
+  feature: Feature,
 ): feature is Feature<LineString | MultiLineString> =>
   filterLineString(feature) && feature.properties?.hasDestinations === true;

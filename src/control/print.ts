@@ -6,7 +6,7 @@ import {
   PageOrientation,
   Size,
 } from "@watergis/maplibre-gl-export";
-import { Map } from "maplibre-gl/dist/maplibre-gl";
+import { Map } from "maplibre-gl";
 import { routeTexts } from "../const";
 import { SvgIconControl } from "./base";
 

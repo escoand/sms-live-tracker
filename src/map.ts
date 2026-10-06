@@ -8,7 +8,7 @@ import {
   MapLibreEvent,
   NavigationControl,
   ScaleControl,
-} from "maplibre-gl/dist/maplibre-gl";
+} from "maplibre-gl";
 import {
   layers,
   positionsSource,
@@ -88,7 +88,7 @@ class LiveTrackerMap {
       routes,
       routeLines,
       routeTexts,
-      routeFilter
+      routeFilter,
     );
     map.addControl(new TrackersControl(positions, routes), "top-left");
     map.addControl(new ScaleControl());
@@ -98,8 +98,8 @@ class LiveTrackerMap {
     map.addControl(
       new StyleSwitcherControl(
         styles.map((_) => _.replace("{apiKey}", this._config?.apiKey || "")),
-        [routesSource, positionsSource, intervalControl.getId()]
-      )
+        [routesSource, positionsSource, intervalControl.getId()],
+      ),
     );
     map.addControl(new NavigationControl(), "bottom-right");
     map.addControl(zoomControl, "bottom-right");

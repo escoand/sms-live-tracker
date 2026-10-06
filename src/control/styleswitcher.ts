@@ -1,5 +1,5 @@
 import { mdiLayers } from "@mdi/js";
-import { Map } from "maplibre-gl/dist/maplibre-gl";
+import { Map } from "maplibre-gl";
 import { SvgIconControl } from "./base";
 
 export default class StyleSwitcherControl extends SvgIconControl {
