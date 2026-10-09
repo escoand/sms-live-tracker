@@ -2,6 +2,9 @@
 /data/
 /node_modules/
 /www/
+/js/
+/dist/
+/live_tracker.zip
 
 /.env
 /app.js

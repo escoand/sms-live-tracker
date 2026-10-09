@@ -2,11 +2,11 @@
   "dependencies": {
     "@maptiler/sdk": "4.1.0",
     "@mdi/js": "7.4.47",
+    "@nextcloud/vue": "9.13.1",
     "@types/geojson": "7946.0.16",
     "@types/node": "^26.1.2",
     "@watergis/maplibre-gl-export": "5.0.0",
     "geojson": "^0.5.0",
-    "hono": "^4.12.32",
     "maplibre-gl": "6.11.2",
     "simplify-js": "1.2.4"
   },
@@ -16,11 +16,8 @@
     "scriptc": "^0.0.21"
   },
   "scripts": {
-    "build": "deno run --allow-env --allow-read --allow-run --allow-write=www npm:esbuild --bundle --minify --outfile=www/index.js --sourcemap src/map.ts",
-    "start": "deno serve --allow-env --allow-net --allow-read=data,www --allow-write=data/trackers.json main.ts",
-    "dev": "deno task dev:server & deno task dev:client",
-    "dev:client": "deno run --allow-env --allow-read --allow-run --allow-write=www npm:esbuild --bundle --outfile=www/index.js --sourcemap --watch src/map.ts",
-    "dev:server": "deno serve --allow-env --allow-net --allow-read=data,www --allow-write=data/trackers.json --env-file --watch main.ts",
-    "test": "deno test --allow-env"
+    "build": "deno run --allow-env --allow-read --allow-run --allow-write=js npm:esbuild --bundle --minify --outdir=js index=src/map.ts admin=src/admin.ts maplibre-gl-worker=node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs",
+    "dev": "deno run --allow-env --allow-read --allow-run --allow-write=js npm:esbuild --bundle --outdir=js index=src/map.ts admin=src/admin.ts maplibre-gl-worker=node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs --watch",
+    "test": "php test/tracker-data.test.php && php test/sms-gateway.test.php && php test/webhook-controller.test.php && php test/appinfo.php"
   }
 }

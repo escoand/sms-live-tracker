@@ -8,7 +8,7 @@ export default class ErrorControl implements IControl {
 
   constructor(evt: ErrorEvent) {
     this._container = document.createElement("code");
-    this._container.innerHTML =
+    this._container.textContent =
       new Date().toLocaleTimeString() + " " + evt.error.message;
   }
 
@@ -38,11 +38,11 @@ export default class ErrorControl implements IControl {
       "ms";
     setTimeout(
       () => this._container.parentNode?.removeChild(this._container),
-      animation_ms
+      animation_ms,
     );
   }
 
-  static createError(msg: string) {
+  static createError(msg: string): ErrorEvent {
     return { error: new Error(msg), type: "error" };
   }
 }

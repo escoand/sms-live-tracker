@@ -58,7 +58,7 @@ export default class PrintControl extends MaplibreExportControl {
     this.map.setLayoutProperty(
       routeTexts,
       "text-overlap",
-      state ? "always" : "never"
+      state ? "always" : "never",
     );
 
     if (!state) {
@@ -72,11 +72,12 @@ export default class PrintControl extends MaplibreExportControl {
 
   private _updatePrintableArea() {
     const size = document.getElementById(
-      "mapbox-gl-export-page-size"
+      "mapbox-gl-export-page-size",
     ) as HTMLSelectElement;
     const orientation = document.getElementById(
-      "mapbox-gl-export-page-orientation"
+      "mapbox-gl-export-page-orientation",
     ) as HTMLSelectElement;
+    if (!size || !orientation) return;
     const currentZoom = this.map.getContainer().style.zoom || 1;
 
     let bounds =

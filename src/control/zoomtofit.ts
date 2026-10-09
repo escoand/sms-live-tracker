@@ -33,6 +33,8 @@ export default class ZoomToFitControl extends SourcedSvgIconControl {
 
   onAdd(map: Map) {
     this._button.addEventListener("click", () => this.zoomToFit());
+    this._button.setAttribute("aria-label", "Zoom to fit map");
+    this._button.title = "Zoom to fit map";
 
     return this._container;
   }

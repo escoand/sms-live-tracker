@@ -1,0 +1,282 @@
+.live-tracker-shell {
+  position: relative;
+  display: flex;
+  height: calc(100vh - 50px);
+  min-height: 350px;
+  width: 100%;
+}
+
+.live-tracker-shell > .app-navigation {
+  position: relative;
+  z-index: 1001;
+  flex: 0 0 300px;
+  height: 100%;
+  min-width: 0;
+  background: var(--color-main-background, #fff);
+}
+
+.live-tracker-shell.sidebar-collapsed > .app-navigation {
+  flex-basis: 0;
+  background: transparent;
+}
+
+.live-tracker-shell.sidebar-collapsed #app-navigation {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.live-tracker-shell .app-navigation-toggle-wrapper {
+  position: absolute;
+  z-index: 1002;
+  top: 16px;
+  left: calc(100% - 42px);
+  width: 34px;
+  height: 34px;
+}
+
+.live-tracker-shell.sidebar-collapsed .app-navigation-toggle-wrapper {
+  left: 8px;
+}
+
+.live-tracker-shell
+  :is(
+    .app-navigation-toggle,
+    .live-tracker-item__request,
+    #live-tracker-map .maplibregl-ctrl-group > button
+  ) {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--border-radius-large, 8px);
+}
+
+.live-tracker-shell .app-navigation-toggle {
+  display: grid;
+  place-items: center;
+  background-color: transparent;
+  cursor: pointer;
+}
+
+.live-tracker-shell
+  :is(
+    .app-navigation-toggle:hover,
+    #live-tracker-map .maplibregl-ctrl-group > button:hover
+  ) {
+  background-color: var(--color-background-hover, #f5f5f5);
+}
+
+.live-tracker-shell.sidebar-collapsed .app-navigation-toggle {
+  background-color: var(--color-main-background, #fff);
+  box-shadow: 0 1px 4px var(--color-box-shadow, #0003);
+}
+
+.live-tracker-shell #app-navigation {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+}
+
+.live-tracker-sidebar-header {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 50px 8px 16px;
+}
+
+.live-tracker-sidebar-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.live-tracker-sidebar-actions,
+.live-tracker-sidebar-actions > .maplibregl-ctrl-group {
+  display: flex;
+  align-items: center;
+  margin: 0;
+}
+
+.live-tracker-sidebar-actions .maplibregl-ctrl-icon {
+  display: block;
+  width: 20px;
+  height: 20px;
+  background-position: center;
+  background-size: contain;
+}
+
+.live-tracker-sidebar-actions .app-navigation-toggle {
+  color: var(--color-main-text, #222);
+}
+
+.live-tracker-list {
+  overflow: auto;
+  min-height: 0;
+  padding: 8px;
+}
+
+.live-tracker-items {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.live-tracker-item {
+  margin-bottom: 4px;
+  border-radius: var(--border-radius-large, 8px);
+}
+
+.live-tracker-item:hover {
+  background: var(--color-background-hover, #f5f5f5);
+}
+.live-tracker-item.active {
+  background: var(--color-background-dark, #ededed);
+}
+
+.live-tracker-item__entry {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.live-tracker-shell .live-tracker-item__focus {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  padding: 8px;
+  border: 0;
+  background: transparent;
+  color: var(--color-main-text, #222);
+  font-weight: 400;
+  text-align: left;
+  cursor: pointer;
+}
+
+.live-tracker-item__name {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  font-weight: 600;
+}
+
+.live-tracker-item__meta,
+.live-tracker-item__details {
+  color: var(--color-text-maxcontrast, #6b6b6b);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.live-tracker-item__details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 44px 8px 8px;
+  overflow-wrap: anywhere;
+}
+
+.live-tracker-item__details[hidden] {
+  display: none;
+}
+.live-tracker-item--missing .live-tracker-item__name {
+  color: var(--color-error-text, #8a0000);
+}
+
+.live-tracker-shell .live-tracker-item__request {
+  display: grid;
+  flex: none;
+  place-items: center;
+  margin-right: 4px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.live-tracker-shell .live-tracker-item__request:hover {
+  background: var(--color-background-dark, #ededed);
+}
+.live-tracker-item__request img {
+  width: 20px;
+  height: 20px;
+}
+.live-tracker-item button:focus-visible {
+  outline: 2px solid var(--color-primary-element, #00679e);
+}
+
+.live-tracker-shell > #app-content {
+  position: relative;
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
+  overflow: hidden;
+}
+
+#live-tracker-map {
+  width: 100%;
+  height: 100%;
+}
+
+.live-tracker-shell #live-tracker-map .maplibregl-ctrl-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow: visible;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.live-tracker-shell #live-tracker-map .maplibregl-ctrl-group > button {
+  flex: none;
+  margin: 0;
+  background-color: var(--color-main-background, #fff);
+  box-shadow: 0 1px 4px var(--color-box-shadow, #0003);
+}
+
+.live-tracker-shell
+  #live-tracker-map
+  .maplibregl-ctrl-group
+  > button:focus-visible {
+  outline: 2px solid var(--color-primary-element, #00679e);
+}
+
+.live-tracker-shell #live-tracker-map .maplibregl-export-list {
+  border-radius: var(--border-radius-large, 8px);
+  background: var(--color-main-background, #fff);
+  box-shadow: 0 1px 4px var(--color-box-shadow, #0003);
+}
+
+@media (max-width: 1023px) {
+  .live-tracker-shell #app-navigation {
+    position: relative;
+    inset: auto;
+    transform: none;
+  }
+
+  .live-tracker-shell > .app-navigation {
+    position: absolute;
+    width: 0;
+    flex-basis: auto;
+    background: transparent;
+  }
+
+  .live-tracker-shell.sidebar-open > .app-navigation {
+    width: min(300px, calc(100% - 48px));
+    background: var(--color-main-background, #fff);
+  }
+
+  .live-tracker-shell:not(.sidebar-open) #app-navigation {
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .live-tracker-shell:not(.sidebar-open) .app-navigation-toggle-wrapper {
+    left: 8px;
+  }
+
+  .live-tracker-shell:not(.sidebar-open) .app-navigation-toggle {
+    background-color: var(--color-main-background, #fff);
+    box-shadow: 0 1px 4px var(--color-box-shadow, #0003);
+  }
+}

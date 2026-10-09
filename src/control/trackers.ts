@@ -1,5 +1,6 @@
 import {
   mdiAccountGroup,
+  mdiCancel,
   mdiCircleSlice2,
   mdiCircleSlice4,
   mdiCircleSlice6,
@@ -24,6 +25,7 @@ const debugProperty = "_isDebug";
 
 const texts: { [key: string]: { [lang: string]: string } } = {
   battery: { de: "Akku" },
+  cancelled: { de: "abgebrochen", _: "cancelled" },
   confirm: {
     de: "Dadurch wird eine SMS an den Tracker und eine SMS zurück gesendet. Bist du sicher?",
     _: "This will send a SMS to the tracker and a SMS back. Are you sure?",
@@ -31,12 +33,15 @@ const texts: { [key: string]: { [lang: string]: string } } = {
   delivered: { de: "zugestellt" },
   failed: { de: "Fehler" },
   requested: { de: "angefragt" },
+  requestPosition: { de: "Position anfordern", _: "Request position" },
   sent: { de: "gesendet" },
+  showOnMap: { de: "Auf der Karte anzeigen", _: "Show on map" },
   update: { _: "Update" },
 };
 
 const states: [string, string][] = [
   ["failed", mdiCloseCircle],
+  ["cancelled", mdiCancel],
   ["delivered", mdiCircleSlice6],
   ["sent", mdiCircleSlice4],
   ["requested", mdiCircleSlice2],
@@ -64,10 +69,22 @@ export default class TrackersControl extends SourcedSvgIconControl {
   private _table: HTMLTableElement;
   private _trackers: HTMLTableSectionElement;
   private _routes: GeoJSONSource;
+  private _sidebar?: HTMLElement;
+  private _sidebarList?: HTMLUListElement;
+  private _sidebarItems = new globalThis.Map<string, HTMLLIElement>();
 
-  constructor(trackers: GeoJSONSource, routes: GeoJSONSource) {
+  constructor(
+    trackers: GeoJSONSource,
+    routes: GeoJSONSource,
+    sidebar?: HTMLElement,
+  ) {
     super(mdiAccountGroup, trackers);
     this._routes = routes;
+    this._sidebar = sidebar;
+    if (sidebar) {
+      this._sidebarList = document.createElement("ul");
+      this._sidebarList.className = "app-navigation-list live-tracker-items";
+    }
 
     this._container
       .appendChild(document.createElement("style"))
@@ -76,7 +93,7 @@ export default class TrackersControl extends SourcedSvgIconControl {
         ".trackers .close { cursor: pointer; text-align: right; }",
         ".trackers .info { color: grey; font-size: x-small; padding-left: 10pt; text-align: left; }",
         ".trackers .fail { color: orangered; }",
-        ".trackers img { height: 25px; width: 25px; }"
+        ".trackers img { height: 25px; width: 25px; }",
       );
     this._table = this._container.appendChild(document.createElement("table"));
     this._trackers = document.createElement("tbody");
@@ -92,6 +109,12 @@ export default class TrackersControl extends SourcedSvgIconControl {
   }
 
   onAdd(map: Map) {
+    if (this._sidebar && this._sidebarList) {
+      this._sidebar.appendChild(this._sidebarList);
+      this._updateTrackers();
+      return this._sidebarList;
+    }
+
     this._table.classList.add("trackers");
     this._table.style.display = "none";
     this._table.innerHTML = `<thead>
@@ -106,7 +129,7 @@ export default class TrackersControl extends SourcedSvgIconControl {
 
     this._button.addEventListener("click", () => this.toggle());
     this._table.firstElementChild?.addEventListener("click", () =>
-      this.toggle()
+      this.toggle(),
     );
 
     return this._container;
@@ -114,6 +137,7 @@ export default class TrackersControl extends SourcedSvgIconControl {
 
   onRemove(map: Map) {
     this._source.off("data", this._onSourceUpdated.bind(this));
+    this._sidebarList?.remove();
     super.onRemove(map);
   }
 
@@ -130,18 +154,26 @@ export default class TrackersControl extends SourcedSvgIconControl {
 
   requestPosition(tracker: string) {
     if (confirm(getText("confirm"))) {
-      fetch("/api/request", {
-        body: tracker,
+      fetch(globalThis.liveTrackerUrls.request, {
+        body: JSON.stringify({ tracker }),
         method: "POST",
-      }).then(
-        (response) =>
-          !response.ok &&
-          this._source.map.fire(
-            ErrorControl.createError(
-              `${response.statusText} (${response.status}): ${response.url}`
-            )
-          )
-      );
+        headers: {
+          "Content-Type": "application/json",
+          ...(globalThis.liveTrackerUrls.requestToken
+            ? { requesttoken: globalThis.liveTrackerUrls.requestToken }
+            : {}),
+        },
+      })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(
+              `${response.statusText} (${response.status}): ${response.url}`,
+            );
+          }
+        })
+        .catch((error) => {
+          this._source.map.fire(ErrorControl.createError(error.message));
+        });
     }
   }
 
@@ -159,13 +191,18 @@ export default class TrackersControl extends SourcedSvgIconControl {
         trackers
           .filter((feature) => feature.geometry.type === "Point")
           .forEach((feature) =>
-            this._updateTrackerInUi(feature as Feature<Point>)
+            this._updateTrackerInUi(feature as Feature<Point>),
           );
-      }
+      },
     );
   }
 
   private _updateTrackerInUi(tracker: Feature<Point>) {
+    if (this._sidebarList) {
+      this._updateSidebarItem(tracker);
+      return;
+    }
+
     const prefix = "data-" + tracker.properties?.name;
 
     // create tracker entry
@@ -186,12 +223,11 @@ export default class TrackersControl extends SourcedSvgIconControl {
           <td id="${prefix}-info" colspan="3" class="info"></td>
         </tr>
     `;
-      // @ts-expect-error: theoretically firstElementChild could be null
       this._trackers.append(...row.childNodes);
       document
         .getElementById(`${prefix}-button`)
         ?.addEventListener("click", () =>
-          this.requestPosition(tracker.properties?.name)
+          this.requestPosition(tracker.properties?.name),
         );
     }
 
@@ -236,13 +272,105 @@ export default class TrackersControl extends SourcedSvgIconControl {
       icon.src = SvgIconControl.createSvg(svgIconPath);
       const date = new Date(tracker.properties?.[state]).getTime();
       info.appendChild(document.createElement("div")).textContent = `${getText(
-        state
+        state,
       )}: ${timeDiff(date)}`;
       return true;
     });
     if (!inProgress) {
       icon.src = SvgIconControl.createSvg(states[states.length - 1][1]);
     }
+  }
+
+  private _updateSidebarItem(tracker: Feature<Point>) {
+    const name = String(tracker.properties?.name || "");
+    let item = this._sidebarItems.get(name);
+    if (!item) {
+      item = document.createElement("li");
+      item.className = "live-tracker-item";
+      const entry = item.appendChild(document.createElement("div"));
+      entry.className = "live-tracker-item__entry";
+      const focus = entry.appendChild(document.createElement("button"));
+      focus.type = "button";
+      focus.className = "live-tracker-item__focus";
+      focus.appendChild(document.createElement("span")).className =
+        "live-tracker-item__name";
+      focus.appendChild(document.createElement("span")).className =
+        "live-tracker-item__meta";
+      const request = entry.appendChild(document.createElement("button"));
+      request.type = "button";
+      request.className = "live-tracker-item__request";
+      request.appendChild(document.createElement("img")).alt = "";
+      request.addEventListener("click", () => this.requestPosition(name));
+      item.appendChild(document.createElement("div")).className =
+        "live-tracker-item__details";
+      this._sidebarList?.appendChild(item);
+      this._sidebarItems.set(name, item);
+    }
+
+    const focus = item.querySelector<HTMLButtonElement>(
+      ".live-tracker-item__focus",
+    )!;
+    const request = item.querySelector<HTMLButtonElement>(
+      ".live-tracker-item__request",
+    )!;
+    const meta = item.querySelector<HTMLElement>(".live-tracker-item__meta")!;
+    const details = item.querySelector<HTMLElement>(
+      ".live-tracker-item__details",
+    )!;
+    item.querySelector<HTMLElement>(".live-tracker-item__name")!.textContent =
+      name;
+    item.classList.toggle(
+      "live-tracker-item--missing",
+      !tracker.geometry.coordinates.length,
+    );
+    focus.title = `${getText("showOnMap")}: ${name}`;
+    focus.onclick = () => {
+      if (!tracker.geometry.coordinates.length) return;
+      this._source.map.flyTo({
+        center: tracker.geometry.coordinates as [number, number],
+        zoom: Math.max(this._source.map.getZoom(), 12),
+      });
+      this._sidebarItems.forEach((entry) => entry.classList.remove("active"));
+      item.classList.add("active");
+      const shell = this._sidebar?.closest(".live-tracker-shell");
+      shell?.classList.remove("sidebar-open");
+      const navigation = shell?.querySelector<HTMLElement>("#app-navigation");
+      if (navigation && window.matchMedia("(max-width: 1023px)").matches) {
+        navigation.inert = true;
+        navigation.setAttribute("aria-hidden", "true");
+        const toggle = shell?.querySelector<HTMLElement>(
+          "#live-tracker-sidebar-toggle",
+        );
+        toggle?.setAttribute("aria-expanded", "false");
+        toggle?.setAttribute("aria-label", "Show trackers");
+        if (toggle) toggle.title = "Show trackers";
+      }
+    };
+    const metaParts = [];
+    if (tracker.properties?.battery)
+      metaParts.push(`${getText("battery")}: ${tracker.properties.battery}`);
+    if (tracker.geometry.coordinates.length && tracker.properties?.received) {
+      metaParts.push(timeDiff(new Date(tracker.properties.received).getTime()));
+    }
+    meta.textContent = metaParts.join(" · ");
+    meta.hidden = !metaParts.length;
+
+    const state = states.find(([key]) => tracker.properties?.[key]);
+    request.title = `${getText("requestPosition")}: ${name}`;
+    request.setAttribute("aria-label", request.title);
+    request.querySelector("img")!.src = SvgIconControl.createSvg(
+      state?.[1] || states[states.length - 1][1],
+    );
+    details.replaceChildren();
+    if (tracker.properties?.nextPoi) {
+      details.appendChild(document.createElement("span")).textContent =
+        tracker.properties.nextPoi;
+    }
+    if (state) {
+      const status = `${getText(state[0])}: ${timeDiff(new Date(tracker.properties?.[state[0]]).getTime())}`;
+      details.appendChild(document.createElement("span")).textContent = status;
+    }
+    details.hidden = !details.childElementCount;
   }
 
   private _findNextPoiOnRoute(routes: Feature[], trackers: Feature[]) {
@@ -256,7 +384,7 @@ export default class TrackersControl extends SourcedSvgIconControl {
         ).map((pos) => ({
           lnglat: new LngLat(pos[0], pos[1]) as LngLat,
           distance: 0,
-        }))
+        })),
       )
       .map((cur, idx, arr) => {
         if (idx > 0)
@@ -277,7 +405,7 @@ export default class TrackersControl extends SourcedSvgIconControl {
         if (!point.properties) point.properties = {};
         point.properties._lngLat = new LngLat(
           point.geometry.coordinates[0],
-          point.geometry.coordinates[1]
+          point.geometry.coordinates[1],
         );
         point.properties._closestRouteDist = Infinity;
         point.properties._closestRouteIdx = -1;
@@ -300,7 +428,7 @@ export default class TrackersControl extends SourcedSvgIconControl {
       .filter(filterPoi)
       .sort(
         (a, b) =>
-          a.properties?._closestRouteIdx - b.properties?._closestRouteIdx
+          a.properties?._closestRouteIdx - b.properties?._closestRouteIdx,
       );
 
     // loop through trackers and measure distance to next POI
@@ -308,7 +436,7 @@ export default class TrackersControl extends SourcedSvgIconControl {
       const nextPoi = sortedPois.find(
         (route) =>
           route.properties?._closestRouteIdx >=
-          point.properties?._closestRouteIdx
+          point.properties?._closestRouteIdx,
       );
       this._debugTrack(point, nextPoi, routePoints);
       if (!nextPoi || !point.properties || !nextPoi.properties) return;
@@ -327,7 +455,7 @@ export default class TrackersControl extends SourcedSvgIconControl {
   private _debugTrack(
     point: Feature<Point>,
     nextPoi: Feature<Point> | undefined,
-    routePoints: { lnglat: LngLat }[]
+    routePoints: { lnglat: LngLat }[],
   ) {
     if (point.properties?.[debugProperty] !== true) return;
 
@@ -361,9 +489,9 @@ export default class TrackersControl extends SourcedSvgIconControl {
         routePoints
           .slice(
             point.properties._closestRouteIdx,
-            nextPoi.properties?._closestRouteIdx + 1
+            nextPoi.properties?._closestRouteIdx + 1,
           )
-          .map((point) => point.lnglat.toArray())
+          .map((point) => point.lnglat.toArray()),
       )
       .concat([nextPoi.geometry.coordinates]);
     source.setData({ type: "LineString", coordinates });
@@ -381,7 +509,7 @@ export default class TrackersControl extends SourcedSvgIconControl {
       };
       const collection = toFeatures(data);
       const idx = collection.findIndex(
-        (feature) => feature.properties?.[debugProperty] === true
+        (feature) => feature.properties?.[debugProperty] === true,
       );
       if (idx >= 0) collection[idx] = point;
       else collection.push(point);

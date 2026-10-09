@@ -2,11 +2,7 @@
   "deno.config": "./deno.json",
   "deno.enable": true,
   "deno.enablePaths": [
-    "./main.ts",
-    "./src/backend",
-    "./src/parser",
-    "./src/store.ts",
-    "./test/"
+    "./src/"
   ],
   "editor.inlayHints.enabled": "off"
 }

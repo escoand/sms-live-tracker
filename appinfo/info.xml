@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <id>live_tracker</id>
+    <name>Live Tracker</name>
+    <summary>Map and manage live trackers</summary>
+    <description>Track devices and routes on a live map using configurable position backends.</description>
+    <version>1.2.7</version>
+    <licence>agpl</licence>
+    <author>Live Tracker contributors</author>
+    <namespace>LiveTracker</namespace>
+    <category>tools</category>
+    <bugs>https://github.com/escoand/sms-live-tracker/issues</bugs>
+    <dependencies>
+        <php min-version="8.1" />
+        <nextcloud min-version="31" max-version="35" />
+    </dependencies>
+    <settings>
+        <admin>OCA\LiveTracker\Settings\Admin</admin>
+        <admin-section>OCA\LiveTracker\Settings\AdminSection</admin-section>
+    </settings>
+    <navigations>
+        <navigation>
+            <name>Live Tracker</name>
+            <route>live_tracker.page.index</route>
+        </navigation>
+    </navigations>
+</info>

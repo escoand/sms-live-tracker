@@ -1,11 +1,13 @@
 # Technical Documentation
 
 ## Overview
-The SMS Live Tracker application provides real-time tracking. It uses MapLibre GL for mapping visualization and Hono for backend services.
+
+Live Tracker is a Nextcloud app. It uses MapLibre GL for visualization, Nextcloud app data for GeoJSON, and a configurable position backend. SMS Gate is the first backend.
 
 ## Architecture
 
 ### High-Level Components
+
 1. **Frontend**
    - Uses MapLibre GL for map rendering
    - Implements custom controls for:
@@ -14,23 +16,35 @@ The SMS Live Tracker application provides real-time tracking. It uses MapLibre G
      - Route analysis (`zoomtofit.ts`)
 
 2. **Backend**
-   - SMS parsing and processing (`src/parser/smstracker.ts`)
-   - Data storage and retrieval (`src/store.ts`)
-   - API gateway for SMS communication (`src/backend/smsgateapp/smsgateapp.ts`)
+
+- Nextcloud routes (`lib/Controller/PageController.php`)
+- GeoJSON storage (`lib/Service/TrackerData.php`)
+- Backend selection (`lib/Service/BackendRegistry.php`)
+- SMS Gate integration (`lib/Service/SmsGateway.php`)
 
 3. **Data Flow**
-```
-SMS Message -> Parser -> Tracker Data -> Map Display
+
+```mermaid
+flowchart LR
+  Device[Tracking device] -->|SMS| Gateway[SMS Gate]
+  Gateway -->|Webhook| Controller[Nextcloud controller]
+  Controller --> Backend[Active position backend]
+  Backend --> Store[Nextcloud app data]
+  Store --> Map[Live map]
+  Map -->|Position request| Controller
+  Controller --> Backend --> Gateway
 ```
 
 ## Key Components
 
 ### 1. Data Storage
-- **Store**: `src/store.ts`
-  - Manages tracker data in JSON format
-  - Handles synchronization of tracking data
+
+- **Store**: `lib/Service/TrackerData.php`
+  - Keeps trackers and routes as GeoJSON in Nextcloud app data
+  - Accepts imports through the browser-based administrator settings
 
 ### 2. Map Controls
+
 - **Trackers Control**: `src/control/trackers.ts`
   - Manages display of tracker information
   - Implements POI (Point of Interest) detection
@@ -60,36 +74,38 @@ SMS Message -> Parser -> Tracker Data -> Map Display
   - Allows users to zoom the map to fit all relevant data points
   - Implements automatic bounds calculation for:
     - LineString geometries
-    - MultiLineString geometries 
+    - MultiLineString geometries
     - Point coordinates
 
 ### 3. Tracker location and updates
+
 - Flexible layout for different implementations
 
 Current implementations:
 
-  - SMS based tracking devices
-    - **Benefits**:
-      - Lower battery consumption
-      - Works in areas with no mobile internet
-      - Cost-effective for occasional use
-    - **Limitations**:
-      - Real-time tracking not guaranteed
-      - Latency between updates
-    - **Message Delivery**: `src/backend/smsgateapp/smsgateapp.ts`
-      - Integrates with external SMS gateway (https://sms-gate.app)
-      - Requesting positions via SMS
-      - Receiving SMS updates
-      - Decrypting/Encrypting sensitive data
-    - **Parser**: `src/parser/smstracker.ts`
-      - Parses SMS messages containing location data (Lat/Lon) and battery status
-      - Data: Lat/Lon coordinates and Battery percentage
+- SMS based tracking devices
+  - **Benefits**:
+    - Lower battery consumption
+    - Works in areas with no mobile internet
+    - Cost-effective for occasional use
+  - **Limitations**:
+    - Real-time tracking not guaranteed
+    - Latency between updates
+  - **Message Delivery**: `lib/Service/SmsGateway.php`
+    - Integrates with external SMS gateway (https://sms-gate.app)
+    - Requesting positions via SMS
+    - Receiving SMS updates
+    - Decrypting/Encrypting sensitive data
+  - **Parser**: `lib/Service/SmsGateway.php`
+    - Parses SMS messages containing location data (Lat/Lon) and battery status
+    - Data: Lat/Lon coordinates and Battery percentage
 
 ## Data Format
 
 The application uses GeoJSON format for both tracking and route data.
 
 ### Trackers Data (`trackers.json`)
+
 - Contains information about tracker devices and their current status
 - Each feature represents a single tracker with:
   - `type`: `"Feature"`
@@ -100,6 +116,7 @@ The application uses GeoJSON format for both tracking and route data.
     - multiple properties are updated dynamically (e.g. `battery`, `requested`, `received`, ...)
 
 ### Route Data (`routes.json`)
+
 - Contains predefined routes and points of interest
 - Each feature represents either:
   - A route with start and end coordinates
@@ -113,55 +130,63 @@ The application uses GeoJSON format for both tracking and route data.
 ## Data Flow
 
 ```mermaid
-flowchart TD
-    _(Tracking device) <--> A(Backend component)
-    A <--> B(Server component)
-    B --> C(Parser)
-    B <--> D(Storage engine)
-    D <--> E@{ shape: doc, label: trackers.json }
-    E --> |reloads periodically| F(Frontend)
-    G@{ shape: doc, label: routes.json } --> F
-    F --> |REST| B
+flowchart LR
+  Device[Tracking device] -->|SMS| Gateway[SMS Gate]
+  Gateway -->|Webhook| Controller[Nextcloud controller]
+  Controller --> Backend[Active position backend]
+  Backend --> Store[Nextcloud app data]
+  Store --> Map[Live map]
+  Map -->|Position request| Controller
+  Controller --> Backend --> Gateway
 ```
 
 ## Testing
 
-### Unit Tests
-- **Crypt Module**: `crypt.test.ts`
-  - Tests encryption/decryption functionality
-  - Verifies correct handling of API keys and iterations
+### Backend Tests
 
-- **SMS Parser**: `smstracker.test.ts`
-  - Tests message parsing logic
-  - Verifies coordinate extraction and battery status updates
+- `test/tracker-data.test.php` checks GeoJSON validation.
+- `test/appinfo.php` checks required app metadata and validates it against the
+  installed Nextcloud schema when available.
 
 ## Deployment
 
-### Docker Setup
-```dockerfile
-# Build Command
-docker build -t sms-live-tracker .
+Install the app in `custom_apps/live_tracker` and enable it in Nextcloud. Ensure
+that directory contains `appinfo/`, `lib/`, `templates/`, `css/`, and `js/`.
+Build the frontend with `deno task build` and include the generated
+`js/index.js`, `js/index.css`, and `js/maplibre-gl-worker.js` in the app package.
+Nextcloud cannot load the map without these three assets.
 
-# Run Command
-docker run -p 8000:8000 --volume /app/data sms-live-tracker
-```
+### GitHub Release
+
+The GitHub Actions workflow builds the frontend, validates the PHP app, and
+uploads `live_tracker.zip` as a workflow artifact. To publish a release, set the
+version in `appinfo/info.xml`, push the matching `v<version>` tag (for example,
+`v1.2.0`), and the workflow attaches the ZIP to the GitHub Release. The ZIP
+contains a top-level `live_tracker/` directory for extraction into
+`custom_apps/`.
+
+To migrate an existing installation, import its GeoJSON tracker and route
+collections through the Live Tracker administrator settings. Enter the SMS Gate
+authentication, encryption passphrase, and position request message there,
+then register the displayed webhook URL with SMS Gate. Nothing needs editing
+in a configuration file.
 
 ### Configuration
-- Environment Variables:
-  - For sms-gate.app backend:
-    - `API_AUTHENTICATION`: Required for SMS gateway authentication
-    - `API_ENCRYPTION`: Encryption key for sensitive data
-    - `API_MESSAGE`: Default message template
+
+- Choose a backend and enter its credentials in **Administration settings >
+  Additional settings > Live Tracker**. No server configuration files need editing.
 
 ## API Endpoints
 
 ### Request Position
-- **Endpoint**: `/api/request`
+
+- **Endpoint**: authenticated Nextcloud `live_tracker.page.request` route
 - **Method**: POST
 - **Description**: Triggers position request via SMS
 
 ### Receive Updates
-- **Endpoint**: `/api/receive`
+
+- **Endpoint**: token-protected `live_tracker.page.receive` route
 - **Method**: POST
 - **Description**: Processes incoming SMS updates
 
@@ -176,22 +201,26 @@ docker run -p 8000:8000 --volume /app/data sms-live-tracker
    - Handles API keys securely
 
 3. **Data Protection**
-   - Sensitive data is encrypted both at rest and in transit
-
-## Contributing
+   - Tracker GeoJSON is stored in private Nextcloud app data, not public assets.
+     Protect the Nextcloud database, app data, and backups accordingly.
 
 ### Development Setup
+
+Install Node.js and Deno 2 or newer for the frontend asset build. The app's
+HTTP API, storage, and SMS backend run inside Nextcloud; no separate server is
+started.
+
 ```bash
 # Clone repository
 git clone https://github.com/escoand/sms-live-tracker.git
 cd sms-live-tracker
 
-# Install dependencies
-deno install
+# Install frontend dependencies
+npm ci
+
+# Build the map and worker bundles
 deno task build
 ```
 
-### Testing
-```bash
-deno test --allow-env
-```
+Run `npm test` with PHP 8.1+ and the DOM extension available. For a local
+Nextcloud schema check, run `php test/appinfo.php` inside the Nextcloud container.
