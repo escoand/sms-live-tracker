@@ -8,7 +8,7 @@ RUN deno install && \
     deno task build
 
 # runtime
-FROM reg.mini.dev/deno:2.9.4
+FROM docker.io/denoland/deno:distroless-2.9.8
 WORKDIR /app
 COPY package.json main.ts             .
 COPY src                              src
