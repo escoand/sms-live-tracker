@@ -8,6 +8,7 @@ import {
   MapLibreEvent,
   NavigationControl,
   ScaleControl,
+  setWorkerUrl,
 } from "maplibre-gl";
 import {
   layers,
@@ -31,6 +32,8 @@ import ZoomToFitControl from "./control/zoomtofit";
 import { LiveTrackerConfig } from "./types";
 
 import "@maptiler/sdk/dist/maptiler-sdk.css";
+
+setWorkerUrl("/maplibre-gl-worker.mjs");
 
 class LiveTrackerMap {
   private _config: LiveTrackerConfig | undefined = undefined;

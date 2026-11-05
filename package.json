@@ -16,10 +16,11 @@
     "scriptc": "^0.0.21"
   },
   "scripts": {
-    "build": "deno run --allow-env --allow-read --allow-run --allow-write=www npm:esbuild --bundle --minify --outfile=www/index.js --sourcemap src/map.ts",
+    "build": "deno run --allow-env --allow-read --allow-run --allow-write=www npm:esbuild --bundle --minify --outfile=www/index.js --sourcemap src/map.ts && deno task build:worker",
+    "build:worker": "deno run --allow-env --allow-read --allow-run --allow-write=www npm:esbuild --bundle --minify --outfile=www/maplibre-gl-worker.mjs node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs",
     "start": "deno serve --allow-env --allow-net --allow-read=data,www --allow-write=data/trackers.json main.ts",
     "dev": "deno task dev:server & deno task dev:client",
-    "dev:client": "deno run --allow-env --allow-read --allow-run --allow-write=www npm:esbuild --bundle --outfile=www/index.js --sourcemap --watch src/map.ts",
+    "dev:client": "deno task build:worker && deno run --allow-env --allow-read --allow-run --allow-write=www npm:esbuild --bundle --outfile=www/index.js --sourcemap --watch src/map.ts",
     "dev:server": "deno serve --allow-env --allow-net --allow-read=data,www --allow-write=data/trackers.json --env-file --watch main.ts",
     "test": "deno test --allow-env"
   }
